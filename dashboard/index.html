@@ -275,6 +275,25 @@
 </div>
 
 <script>
+  // Each source is a read-only SQL query on the nse-ranker Supabase project. Supabase's execute_sql
+  // answers with text holding the rows as JSON; these loaders take the rows out of it.
+  ['ranking', 'prices', 'news', 'articles', 'posts', 'stats', 'not_ranked', 'method'].forEach((id) => {
+    dash.loader(id, {
+      description: "Supabase's answer as rows: the JSON list inside the result text",
+      fn: ({ answer }) => {
+        if (answer && answer.error) {
+          throw new Error(typeof answer.error === 'string' ? answer.error : (answer.error.message || 'Supabase query failed'));
+        }
+        const text = typeof answer === 'string' ? answer : (answer && answer.result) || '';
+        const match = text.match(/<untrusted-data-[\w-]+>\s*([\s\S]*?)\s*<\/untrusted-data-[\w-]+>/);
+        if (!match) throw new Error(text.slice(0, 200) || 'Supabase returned no rows');
+        return JSON.parse(match[1]);
+      },
+    });
+  });
+</script>
+
+<script>
   // Shared state and helpers for every drawing on this page.
   window.nse = {
     picked: null,

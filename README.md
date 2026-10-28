@@ -25,14 +25,22 @@ python -m nse_ranker news fetch         # read the news sources in news.toml (ru
 python -m nse_ranker news fetch --backfill   # also older pages, last 30 days (first run)
 python -m nse_ranker news show KCB      # one stock's news; without a ticker, mentions per stock
 python -m nse_ranker news tag           # Haiku reads and tags new articles (rank also does this)
-python -m nse_ranker opinion fetch      # Reddit and X posts per stock, summarised by Haiku
+python -m nse_ranker opinion fetch      # Reddit and X posts per stock, summarised by Haiku (--refresh)
 python -m nse_ranker rank               # ranked list with Haiku's review (--top N, --no-save, --no-ai)
-python -m nse_ranker export             # write the dashboard data files to reports/dashboard/
+python -m nse_ranker export --push      # write the dashboard tables and push them to Supabase
 python -m nse_ranker backtest           # test momentum and risk on 2008-2026 history
 python -m unittest                      # tests
 ```
 Prices and articles are stored in `data/nse.sqlite` (not committed). The feeds only hold the last day
 or two of stories, so news builds up from the day you start running `news fetch`.
+
+### Supabase and the dashboard
+The dashboard reads live from the Supabase project **nse-ranker**: `export --push` upserts the ranking,
+prices, analysis, news, articles and posts, and the dashboard shows them the next time it's opened.
+- Needs `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in `.env` (never committed). The secret key stays on this PC.
+- Every table has row-level security on and no public access rules; the dashboard reads through the
+  owner's Supabase connection. Table definitions: `supabase/migrations/`.
+- Posts are stored and shown without usernames or links ("user (Reddit)", "user (X)").
 
 ### How Haiku is used
 Haiku runs through the `claude` CLI (`claude -p --model haiku`), with no tools, and replies in checked JSON.
