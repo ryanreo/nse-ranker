@@ -4,7 +4,7 @@ import textwrap
 from collections import Counter
 from datetime import date
 
-from . import haiku, insights, news, opinion, prices, ranking, review, store
+from . import export, haiku, insights, news, opinion, prices, ranking, review, store
 from .watchlist import load_watchlist, rankable
 
 STALE_AFTER_DAYS = 4   # warn if the newest price is older than this
@@ -36,9 +36,8 @@ def _cell(score):
     return f"{score:4.0f}" if score is not None else "   -"
 
 
-def show_ranking(db, top, save, use_ai):
-    """Print the ranked list with factor scores, Haiku's review and reasons, then what was left out."""
-    today = date.today()
+def full_ranking(db, use_ai, today):
+    """Formula ranking plus, with use_ai, Haiku's news tags and review. Used by `rank` and `export`."""
     ai_problem = None
     if use_ai:
         try:
@@ -58,6 +57,17 @@ def show_ranking(db, top, save, use_ai):
             ai_problem = str(error)
     formula_position = {r["ticker"]: i for i, r in enumerate(ranked, 1)}
     ranked = review.final_order(ranked, verdicts) if verdicts else ranked
+    return {"results": results, "ranked": ranked, "verdicts": verdicts, "formula_position": formula_position,
+            "tags_by_ticker": tags_by_ticker, "readings": readings, "ai_problem": ai_problem}
+
+
+def show_ranking(db, top, save, use_ai):
+    """Print the ranked list with factor scores, Haiku's review and reasons, then what was left out."""
+    today = date.today()
+    run = full_ranking(db, use_ai, today)
+    results, ranked, verdicts = run["results"], run["ranked"], run["verdicts"]
+    formula_position, tags_by_ticker, readings = run["formula_position"], run["tags_by_ticker"], run["readings"]
+    ai_problem = run["ai_problem"]
     before = ranking.previous_positions(db, today.isoformat())
     if save:
         ranking.save_run(db, ranked + [r for r in results if r["score"] is None], today.isoformat())
@@ -184,6 +194,9 @@ def main():
     rank_cmd.add_argument("--no-save", action="store_true", help="don't record this run")
     rank_cmd.add_argument("--no-ai", action="store_true", help="formula order only, no Haiku")
 
+    export_cmd = commands.add_parser("export", help="write the ranking as JSON files for the dashboard")
+    export_cmd.add_argument("--no-ai", action="store_true", help="formula order only, no Haiku")
+
     args = parser.parse_args()
 
     if args.command == "watchlist":
@@ -207,6 +220,13 @@ def main():
         print(f"Opinion stored for {len(opinion.latest(db))} stocks.")
     elif args.command == "rank":
         show_ranking(store.connect(), args.top, save=not args.no_save, use_ai=not args.no_ai)
+    elif args.command == "export":
+        db = store.connect()
+        run = full_ranking(db, not args.no_ai, date.today())
+        if run["ai_problem"]:
+            print(f"! Haiku review skipped: {run['ai_problem']}")
+        for name, (path, rows) in export.write_all(db, run).items():
+            print(f"  {name}: {rows} rows -> {path}")
     elif args.command == "prices":
         db = store.connect()
         if args.action == "history":
