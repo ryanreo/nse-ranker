@@ -5,7 +5,7 @@ import textwrap
 from collections import Counter
 from datetime import date
 
-from . import backtest, export, haiku, insights, news, opinion, prices, ranking, review, store
+from . import backtest, export, supabase, haiku, insights, news, opinion, prices, ranking, review, store
 from .watchlist import load_watchlist, rankable
 
 STALE_AFTER_DAYS = 4   # warn if the newest price is older than this
@@ -221,6 +221,7 @@ def main():
 
     export_cmd = commands.add_parser("export", help="write the ranking as JSON files for the dashboard")
     export_cmd.add_argument("--no-ai", action="store_true", help="formula order only, no Haiku")
+    export_cmd.add_argument("--push", action="store_true", help="also push the tables to Supabase")
 
     args = parser.parse_args()
 
@@ -254,6 +255,9 @@ def main():
             print(f"! Haiku review skipped: {run['ai_problem']}")
         for name, (path, rows) in export.write_all(db, run).items():
             print(f"  {name}: {rows} rows -> {path}")
+        if args.push:
+            print("Pushing to Supabase...")
+            supabase.push(export.build_all(db, run))
     elif args.command == "prices":
         db = store.connect()
         if args.action == "history":
