@@ -1,0 +1,46 @@
+# News sources and the Kenyan topics that move whole sectors.
+#
+# ai_use: whether article text may be passed to an AI model in section 7.
+#   Business Daily and Nation say "ai-train=no, use=reference" and block ClaudeBot, so for them we keep
+#   only the headline, link and the feed's short summary, and never send their text to AI.
+
+[[source]]
+name = "Business Daily"
+feed = "https://www.businessdailyafrica.com/bd/rss.xml"
+ai_use = false
+
+[[source]]
+name = "The Standard (business)"
+feed = "https://www.standardmedia.co.ke/rss/business.php"
+ai_use = true
+
+[[source]]
+name = "The Standard (headlines)"
+feed = "https://www.standardmedia.co.ke/rss/headlines.php"
+ai_use = true
+
+[[source]]
+name = "Capital FM (business)"
+feed = "https://capitalfm.africa/business/feed/"
+ai_use = true
+
+[[source]]
+name = "Capital FM (news)"
+feed = "https://capitalfm.africa/news/feed/"
+ai_use = true
+
+# Topics: news about these affects every stock in the listed sectors ("all" = the whole market).
+# Keywords ignore case, except ALL-CAPS ones, which must match exactly.
+[topics]
+"interest rates" = { sectors = ["Banking", "Insurance"], keywords = ["Central Bank Rate", "CBK", "Monetary Policy Committee", "MPC", "interest rate", "interest rates", "lending rates"] }
+"inflation" = { sectors = ["all"], keywords = ["inflation", "cost of living", "consumer prices"] }
+"shilling" = { sectors = ["all"], keywords = ["Kenya shilling", "Kenyan shilling", "shilling against the dollar", "exchange rate", "forex reserves", "dollar shortage"] }
+"government debt" = { sectors = ["Banking", "Insurance"], keywords = ["Treasury bills", "T-bills", "Treasury bond", "Eurobond", "IMF", "public debt", "domestic borrowing"] }
+"tax" = { sectors = ["all"], keywords = ["Finance Bill", "Finance Act", "excise duty", "tax changes", "new taxes", "tax measures", "tax increases"] }
+"fuel prices" = { sectors = ["Energy and Petroleum", "Commercial and Services", "Manufacturing and Allied"], keywords = ["fuel prices", "pump prices", "petrol", "diesel", "EPRA"] }
+"power tariffs" = { sectors = ["Energy and Petroleum"], keywords = ["electricity tariff", "power tariff", "electricity prices", "power outage", "blackout"] }
+"tea" = { sectors = ["Agricultural"], keywords = ["tea auction", "tea prices", "tea exports", "Mombasa auction"] }
+"weather" = { sectors = ["Agricultural", "Energy and Petroleum"], keywords = ["drought", "rainfall", "long rains", "short rains", "El Nino", "La Nina", "dam levels"] }
+"tourism" = { sectors = ["Commercial and Services"], keywords = ["tourism", "tourist arrivals", "hotel occupancy"] }
+"stock market" = { sectors = ["all"], keywords = ["Nairobi Securities Exchange", "NSE", "NASI", "bourse", "foreign investors"] }
+"politics" = { sectors = ["all"], keywords = ["election", "elections", "IEBC", "anti-government protests", "street protests", "demonstrations"] }
