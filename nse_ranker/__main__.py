@@ -1,9 +1,10 @@
 """Command line: python -m nse_ranker <command>"""
 import argparse
+import textwrap
 from collections import Counter
 from datetime import date
 
-from . import news, prices, ranking, store
+from . import haiku, insights, news, opinion, prices, ranking, review, store
 from .watchlist import load_watchlist, rankable
 
 STALE_AFTER_DAYS = 4   # warn if the newest price is older than this
@@ -35,36 +36,74 @@ def _cell(score):
     return f"{score:4.0f}" if score is not None else "   -"
 
 
-def show_ranking(db, top, save):
-    """Print the ranked list with factor scores and reasons, then what was left out and why."""
+def show_ranking(db, top, save, use_ai):
+    """Print the ranked list with factor scores, Haiku's review and reasons, then what was left out."""
     today = date.today()
-    results = ranking.rank(db, today)
+    ai_problem = None
+    if use_ai:
+        try:
+            print("Haiku is reading new articles...")
+            read, kept = insights.tag_pending(db, load_watchlist(), progress=lambda m: print(m))
+            if not read:
+                print("  no new articles")
+        except haiku.HaikuError as error:
+            ai_problem = str(error)
+    results, tags_by_ticker, readings = ranking.rank(db, today)
+    ranked = [r for r in results if r["score"] is not None]
+    verdicts = {}
+    if use_ai and not ai_problem:
+        try:
+            verdicts = review.review(db, ranked, tags_by_ticker, readings)
+        except haiku.HaikuError as error:
+            ai_problem = str(error)
+    formula_position = {r["ticker"]: i for i, r in enumerate(ranked, 1)}
+    ranked = review.final_order(ranked, verdicts) if verdicts else ranked
     before = ranking.previous_positions(db, today.isoformat())
     if save:
-        ranking.save_run(db, results, today.isoformat())
+        ranking.save_run(db, ranked + [r for r in results if r["score"] is None], today.isoformat())
 
-    ranked = [r for r in results if r["score"] is not None]
     newest = max(r["price_date"] for r in results)
+    print()
     print(f"NSE ranking, {today:%d %b %Y}  (prices up to {newest})")
     print("A research tool, not financial advice.")
     if (today - date.fromisoformat(newest)).days > STALE_AFTER_DAYS:
         print(f"! Prices are more than {STALE_AFTER_DAYS} days old: run `prices update` after 15:30.")
+    if ai_problem:
+        print(f"! Haiku review skipped: {ai_problem}")
+    elif not use_ai:
+        print("Formula order only (--no-ai).")
     print()
     print(f"{'#':>3}  {'Ticker':<6} {'Score':>5}  {'Mom':>4} {'Val':>4} {'Div':>4} {'Qua':>4} {'Risk':>4}"
-          f"  {'Price':>9}  {'vs last':>7}  Hold")
+          f" {'News':>4} {'Opin':>4}  {'Price':>9}  {'Formula':>7}  {'vs last':>7}  Hold")
     for position, r in enumerate(ranked[:top], 1):
         f = r["factors"]
-        move = "new" if r["ticker"] not in before else f"{before[r['ticker']] - position:+d}"
+        since_last = "new" if r["ticker"] not in before else f"{before[r['ticker']] - position:+d}"
         print(f"{position:>3}  {r['ticker']:<6} {r['score']:5.1f}  {_cell(f['momentum'])} {_cell(f['value'])} "
-              f"{_cell(f['dividend'])} {_cell(f['quality'])} {_cell(f['risk'])}  {r['price']:>9,.2f}  {move:>7}"
-              f"  {r['hold'] or '-'}")
-        print(f"{'':13}{r['name']}: " + ("; ".join(r["reasons"]) or "no standout factor"))
+              f"{_cell(f['dividend'])} {_cell(f['quality'])} {_cell(f['risk'])} {_cell(f['news'])} "
+              f"{_cell(f['opinion'])}  {r['price']:>9,.2f}  {'#' + str(formula_position[r['ticker']]):>7}"
+              f"  {since_last:>7}  {r['hold'] or '-'}")
+        print(f"{'':6}{r['name']}. Formula: " + ("; ".join(r["reasons"]) or "no standout factor"))
+        verdict = verdicts.get(r["ticker"])
+        if verdict:
+            moved = (f" Haiku moved it {abs(verdict['move'])} place{'s' if abs(verdict['move']) > 1 else ''} "
+                     f"{'up' if verdict['move'] > 0 else 'down'}." if verdict["move"] else "")
+            text = f"Does it make sense to buy? {verdict['case'].capitalize()} case.{moved} {verdict['explanation']}"
+            print(textwrap.fill(text, width=110, initial_indent=" " * 6, subsequent_indent=" " * 6))
+            news_ids = [e for e in verdict["evidence"] if e.startswith("N")]
+            for tag in tags_by_ticker.get(r["ticker"], []):
+                if f"N{tag['id']}" in news_ids:
+                    print(f"{'':8}N{tag['id']} {tag['published'][:10]} {tag['title'][:70]}  {tag['url']}")
+        print()
     if len(ranked) > top:
         print(f"... and {len(ranked) - top} more (use --top {len(ranked)} to see all).")
-    print()
+        print()
     print("Hold: a guide from what drives each score (momentum 3-6 months, earnings growth and calm")
     print("prices 6-12 months, cheapness and dividends 12+ months). Re-rank monthly; if a stock drops")
     print("out of the top half, the reason you bought it has probably faded.")
+    print("Formula: the position from the scores alone. Haiku can move a stock up to 5 places, only")
+    print("when news (or, at most 1 place, online opinion) gives a reason the numbers can't see.")
+    if not readings:
+        print("Online opinion: none yet. Run `opinion fetch` once Reddit and/or X are set up.")
 
     left_out = [r for r in results if r["score"] is None]
     if left_out:
@@ -134,9 +173,16 @@ def main():
     show.add_argument("ticker", nargs="?")
     show.add_argument("--days", type=int, default=14)
 
+    news_actions.add_parser("tag", help="have Haiku read and tag new matched articles")
+
+    opinion_cmd = commands.add_parser("opinion", help="online opinion from Reddit and X")
+    opinion_actions = opinion_cmd.add_subparsers(dest="action", required=True)
+    opinion_actions.add_parser("fetch", help="search Reddit and X for each ranked stock; Haiku summarises")
+
     rank_cmd = commands.add_parser("rank", help="rank the watchlist from stored data")
     rank_cmd.add_argument("--top", type=int, default=20, help="how many to show (default 20)")
     rank_cmd.add_argument("--no-save", action="store_true", help="don't record this run")
+    rank_cmd.add_argument("--no-ai", action="store_true", help="formula order only, no Haiku")
 
     args = parser.parse_args()
 
@@ -147,10 +193,20 @@ def main():
         if args.action == "fetch":
             for source, (items, new) in news.fetch_all(db).items():
                 print(f"  {source}: {items} items, {new} new")
+        elif args.action == "tag":
+            read, kept = insights.tag_pending(db, load_watchlist())
+            print(f"Haiku read {read} articles and kept {kept} tags.")
         else:
             show_news(db, args.ticker, args.days)
+    elif args.command == "opinion":
+        db = store.connect()
+        ranked = [s for s in load_watchlist() if s["status"] == "rank"]
+        problems = opinion.collect(db, ranked)
+        for problem in problems:
+            print(f"! {problem}")
+        print(f"Opinion stored for {len(opinion.latest(db))} stocks.")
     elif args.command == "rank":
-        show_ranking(store.connect(), args.top, save=not args.no_save)
+        show_ranking(store.connect(), args.top, save=not args.no_save, use_ai=not args.no_ai)
     elif args.command == "prices":
         db = store.connect()
         if args.action == "history":

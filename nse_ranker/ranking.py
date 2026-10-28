@@ -2,30 +2,42 @@
 import json
 from datetime import date, timedelta
 
-from . import scoring, store
+from . import insights, opinion, scoring, store
 from .watchlist import load_watchlist
 
 HISTORY_DAYS = 400   # enough calendar days for 6-month momentum plus a margin
+NEWS_PER_STOCK = 6   # news tags shown to Haiku per stock in the review
 
 
 def build_inputs(db, today=None):
-    """One input dict per "rank" stock, in the shape scoring.score_all() expects."""
+    """One input dict per "rank" stock, in the shape scoring.score_all() expects.
+
+    Also returns the news tags for each stock and the opinion readings, for the review.
+    """
     today = today or date.today()
     since = (today - timedelta(days=HISTORY_DAYS)).isoformat()
-    stocks = []
-    for stock in load_watchlist():
-        if stock["status"] != "rank":
-            continue
+    watchlist = [s for s in load_watchlist() if s["status"] == "rank"]
+    tags = insights.recent_tags(db, today)
+    news = insights.news_scores(tags, watchlist, today)
+    readings = opinion.latest(db, today)
+    stocks, tags_by_ticker = [], {}
+    for stock in watchlist:
+        ticker = stock["ticker"]
         # Results in another currency (e.g. Rwandan francs) can't be compared with a KES price.
         foreign = stock.get("reports_in", "KES") != "KES"
-        eps_changes = [] if foreign else store.eps_history(db, stock["ticker"])
+        eps_changes = [] if foreign else store.eps_history(db, ticker)
         eps, dps = (eps_changes[-1][1], eps_changes[-1][2]) if eps_changes else (None, None)
         stocks.append({
-            "ticker": stock["ticker"], "name": stock["name"], "sector": stock["sector"],
-            "rows": store.history(db, stock["ticker"], since=since),
+            "ticker": ticker, "name": stock["name"], "sector": stock["sector"],
+            "rows": store.history(db, ticker, since=since),
             "eps": eps, "dps": dps, "eps_changes": eps_changes,
+            "news": news.get(ticker),
+            "opinion": opinion.opinion_score(readings[ticker]) if ticker in readings else None,
         })
-    return [s for s in stocks if s["rows"]]
+        direct = [t for t in tags if t["ticker"] == ticker]
+        sector = [t for t in tags if t["ticker"] is None and t["sector"] == stock["sector"]]
+        tags_by_ticker[ticker] = (direct + sector)[:NEWS_PER_STOCK]
+    return [s for s in stocks if s["rows"]], tags_by_ticker, readings
 
 
 def describe(name, raw, good):
@@ -44,6 +56,10 @@ def describe(name, raw, good):
         return f"EPS {raw:+.0%} at the latest results"
     if name == "risk":
         return f"{'calm' if good else 'jumpy'} price (typical daily move {raw:.1%})"
+    if name == "news":
+        return f"recent news {'positive' if good else 'negative'}"
+    if name == "opinion":
+        return f"online opinion {'positive' if good else 'negative'} (lowest weight)"
     return f"{name} {'positive' if good else 'negative'}"
 
 
@@ -83,8 +99,8 @@ def hold_time(result):
 
 
 def rank(db, today=None):
-    """Score every "rank" stock. Returns (results, inputs by ticker)."""
-    inputs = build_inputs(db, today)
+    """Score every "rank" stock. Returns (results best first, news tags by ticker, opinion readings)."""
+    inputs, tags_by_ticker, readings = build_inputs(db, today)
     results = scoring.score_all(inputs)
     by_ticker = {s["ticker"]: s for s in inputs}
     for result in results:
@@ -94,7 +110,7 @@ def rank(db, today=None):
         result["price_date"] = stock["rows"][-1][0]
         result["reasons"] = reasons(result) if result["score"] is not None else []
         result["hold"] = hold_time(result) if result["score"] is not None else None
-    return results
+    return results, tags_by_ticker, readings
 
 
 def _runs_table(db):
@@ -104,7 +120,10 @@ def _runs_table(db):
 
 
 def save_run(db, results, run_date=None):
-    """Keep every ranking so later runs can be compared and the score backtested."""
+    """Keep every ranking so later runs can be compared and the score backtested.
+
+    `results` should be in the order shown (after any Haiku moves); that order is what's saved.
+    """
     run_date = run_date or date.today().isoformat()
     _runs_table(db)
     db.executemany(
