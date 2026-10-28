@@ -1,22 +1,20 @@
 """Online opinion from Reddit and X, summarised by Haiku. The lowest-weight factor (3 points).
 
-- X: Agent-Reach's `twitter` CLI. Needs TWITTER_AUTH_TOKEN and TWITTER_CT0 in .env, exported by you
-  from your own logged-in x.com session. They're passed to the CLI and never printed.
+- X: OpenCLI (`opencli twitter search`), one search per stock, through your logged-in Chrome.
+  (Agent-Reach's `twitter` CLI 0.8.5 gets HTTP 404 from X as of Oct 2026, so it isn't used.)
 - Reddit: OpenCLI, which reads through your logged-in Chrome (needs the OpenCLI extension connected).
   Rather than one search per stock, it reads the newest posts from a few Kenyan subreddits once per
   run and matches them to stocks by name, like the news. Fewer requests, gentler on the account.
 If a source isn't set up, it's skipped and the run says so.
 """
 import json
-import os
 import shutil
 import subprocess
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from . import haiku
 from .news import Matcher
-from .sources.eodhd import ENV_FILE
 
 DAYS = 30
 MAX_POSTS = 15          # X posts per stock search
@@ -65,15 +63,6 @@ OPINION_SCHEMA = {
 }
 
 
-def _env(path=ENV_FILE):
-    values = {}
-    if path.exists():
-        for line in path.read_text().splitlines():
-            name, _, value = line.partition("=")
-            if value.strip():
-                values[name.strip()] = value.strip()
-    return values
-
 
 def _first(item, *keys):
     """The first non-empty value among several possible field names."""
@@ -104,31 +93,38 @@ def query(stock):
 
 # ---- Sources. Each returns (posts, problem): problem is None if the source worked. ----
 
-def from_x(stock, run=subprocess.run):
-    env = _env()
-    token, ct0 = env.get("TWITTER_AUTH_TOKEN"), env.get("TWITTER_CT0")
-    if not (token and ct0):
-        return [], "X not set up: add TWITTER_AUTH_TOKEN and TWITTER_CT0 to .env"
-    twitter = shutil.which("twitter")   # full path: on Windows these CLIs are .exe/.cmd files
-    if not twitter:
-        return [], "X not set up: the `twitter` command (Agent-Reach) isn't on PATH"
-    since = (date.today() - timedelta(days=DAYS)).isoformat()
-    done = run([twitter, "search", query(stock), "--type", "latest", "--since", since,
-                "-n", str(MAX_POSTS), "--json"],
-               capture_output=True, text=True, encoding="utf-8", timeout=120,
-               env=dict(os.environ, TWITTER_AUTH_TOKEN=token, TWITTER_CT0=ct0))
+def _x_date(text):
+    """X's 'Wed Oct 28 08:00:10 +0000 2026' -> a datetime, or None."""
+    try:
+        return datetime.strptime(text, "%a %b %d %H:%M:%S %z %Y")
+    except (TypeError, ValueError):
+        return None
+
+
+def from_x(stock, run=subprocess.run, now=None):
+    """Latest X posts naming the stock, through OpenCLI and your logged-in Chrome. Replies and
+    retweets are left out (they're mostly customer-care chatter)."""
+    opencli = shutil.which("opencli")   # full path: on Windows these CLIs are .cmd files
+    if not opencli:
+        return [], "X not set up: the `opencli` command isn't on PATH"
+    done = run([opencli, "twitter", "search", query(stock), "--product", "live", "--exclude", "replies",
+                "--limit", str(MAX_POSTS), "-f", "json"],
+               capture_output=True, text=True, encoding="utf-8", timeout=180)
+    if done.returncode != 0:
+        output = done.stdout + done.stderr
+        detail = "connect the OpenCLI extension in Chrome" if "BROWSER_CONNECT" in output else output.strip()[:120]
+        return [], f"X not available: {detail}"
     try:
         items = _items(done.stdout)
     except (ValueError, RuntimeError) as error:
         return [], f"X search failed: {str(error)[:120]}"
+    cutoff = (now or datetime.now(timezone.utc)) - timedelta(days=DAYS)
     posts = []
     for item in items:
-        text = _first(item, "text", "full_text", "content")
-        if text:
-            author = _first(item, "author", "user", "screen_name", "username")
-            tweet_id = _first(item, "id", "id_str", "rest_id")
-            url = _first(item, "url", "link") or (f"https://x.com/{author}/status/{tweet_id}" if tweet_id else "")
-            posts.append({"platform": "X", "author": author, "text": text, "url": url})
+        text, posted = _first(item, "text"), _x_date(item.get("created_at"))
+        if text and (posted is None or posted >= cutoff):
+            posts.append({"platform": "X", "author": _first(item, "author"), "text": text,
+                          "url": _first(item, "url")})
     return posts, None
 
 

@@ -116,6 +116,20 @@ class TestOpinion(unittest.TestCase):
         self.assertIsNone(problem)
         self.assertEqual({p["text"] for p in posts}, {"Safaricom dividend Paid today"})
 
+    def test_x_reader_keeps_recent_posts(self):
+        from datetime import datetime, timezone
+        from types import SimpleNamespace
+        listing = json.dumps([
+            {"id": "1", "author": "MwangoCapital", "text": "M-PESA customers rose 16.5%",
+             "created_at": "Wed Oct 28 08:00:10 +0000 2026", "url": "https://x.com/i/status/1"},
+            {"id": "2", "author": "old", "text": "Old take", "created_at": "Mon Jan 05 08:00:10 +0000 2026",
+             "url": "https://x.com/i/status/2"},
+        ])
+        run = lambda *a, **k: SimpleNamespace(returncode=0, stdout=listing, stderr="")
+        posts, problem = opinion.from_x(self.STOCK, run=run, now=datetime(2026, 10, 28, tzinfo=timezone.utc))
+        self.assertIsNone(problem)
+        self.assertEqual([(p["author"], p["url"]) for p in posts], [("MwangoCapital", "https://x.com/i/status/1")])
+
     def test_reddit_connection_problem_is_explained(self):
         from types import SimpleNamespace
         run = lambda *a, **k: SimpleNamespace(returncode=1, stdout="", stderr="code: BROWSER_CONNECT")

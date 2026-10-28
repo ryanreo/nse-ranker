@@ -36,9 +36,10 @@ Haiku runs through the `claude` CLI (`claude -p --model haiku`), with no tools, 
 1. **News tags:** Haiku reads matched articles and tags each one: stock or sector, good or bad, how strong,
    and an exact quote. Tags whose quote isn't in the article are dropped. Each article is read once.
    Business Daily and Nation text is never sent (their sites say reference use only).
-2. **Online opinion:** the newest posts in r/nsekenya, r/Kenya and r/nairobi (OpenCLI, through your logged-in Chrome) and X (Agent-Reach's
-   `twitter`, with `TWITTER_AUTH_TOKEN` and `TWITTER_CT0` in `.env`). Haiku summarises them and flags hype.
-   It's the lowest-weight factor (3 points), and hype counts half.
+2. **Online opinion:** the newest posts in r/nsekenya, r/Kenya and r/nairobi, plus an X search per stock,
+   both through OpenCLI and your logged-in Chrome (keep the OpenCLI extension connected). Haiku counts only
+   posts about the company as an investment, summarises them and flags hype. It's the lowest-weight factor
+   (3 points), and hype counts half.
 3. **Review ("does it make sense to buy?"):** Haiku explains every stock's score and rates the case as
    strong, mixed or weak. It may move a stock up to 5 places from the formula order. A move must cite news
    or opinion, since the factor numbers are already in the score, and a move backed only by online opinion
