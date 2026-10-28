@@ -49,8 +49,16 @@ def load_recent(db, tickers):
     """
     total = 0
     today = date.today().isoformat()
+    done = {t for (t,) in db.execute("SELECT ticker FROM fundamentals WHERE date = ?", (today,))}
     for i, ticker in enumerate(tickers, 1):
-        rows, facts = afx.stock_page(ticker)
+        if ticker in done:
+            print(f"  [{i}/{len(tickers)}] {ticker}: already fetched today")
+            continue
+        try:
+            rows, facts = afx.stock_page(ticker)
+        except OSError as error:   # timeouts and connection errors: skip this one, keep going
+            print(f"  [{i}/{len(tickers)}] {ticker}: failed ({error}); run again later to retry")
+            continue
         count = store.save_prices(db, rows)
         if facts:
             store.save_fundamentals(db, ticker, today, facts, "afx")

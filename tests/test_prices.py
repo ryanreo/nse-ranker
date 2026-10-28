@@ -93,6 +93,20 @@ class TestEodhd(unittest.TestCase):
             eodhd.api_key("no-such-file.env")
 
 
+class TestLoadRecent(unittest.TestCase):
+    def test_a_timeout_skips_one_stock_and_a_rerun_skips_finished_ones(self):
+        from unittest import mock
+        from nse_ranker import prices
+        db = store.connect(":memory:")
+        page = ([{"ticker": "AAA", "date": "2026-10-27", "close": 10.0, "high": None, "low": None,
+                  "prev_close": 9.5, "volume": 100, "source": "afx"}], {"eps": 1.0, "dps": 0.5})
+        with mock.patch.object(afx, "stock_page", side_effect=[page, TimeoutError("read timed out")]):
+            self.assertEqual(prices.load_recent(db, ["AAA", "BBB"]), 1)   # BBB failed, no crash
+        with mock.patch.object(afx, "stock_page", return_value=page) as fetch:
+            prices.load_recent(db, ["AAA", "BBB"])
+        self.assertEqual(fetch.call_count, 1)                              # only BBB fetched again
+
+
 class TestStore(unittest.TestCase):
     def test_save_and_read_back(self):
         db = store.connect(":memory:")
