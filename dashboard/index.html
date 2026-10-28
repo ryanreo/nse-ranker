@@ -1,0 +1,530 @@
+<meta name="dash-one-writer">
+<style>
+  .nse { display: grid; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); }
+  .nse-head { display: grid; gap: var(--cds-gap-xs); }
+  .nse-head h1 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); text-wrap: balance; }
+  .nse-lead { margin: 0; max-width: 70ch; color: var(--color-fg); }
+  .nse-note { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); max-width: 70ch; }
+  .nse b { font-weight: var(--cds-font-weight-medium); }
+
+  .nse-tiles { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+  .nse-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); }
+  .nse-tile span { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .nse-tile b { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .nse .nse-ok { color: var(--color-ok); }
+  .nse .nse-warn { color: var(--color-warn); }
+  .nse .nse-bad { color: var(--color-bad); }
+
+  .nse-main { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); align-items: start; }
+  .nse-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
+  .nse-card h2 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+  .nse-card h3 { margin: var(--cds-gap-sm) 0 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .nse-card > p, .nse-sub { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+
+  .nse-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); }
+  .nse-controls input, .nse-controls select { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 0; }
+  .nse-controls input { flex: 1 1 12rem; }
+
+  .nse-scroll { max-height: 38rem; overflow: auto; border-top: 1px solid var(--color-border-line); }
+  .nse-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .nse-table th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: 0; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; z-index: 1; }
+  .nse-table th button { all: unset; cursor: pointer; display: block; padding: var(--cds-pad-xs) var(--cds-pad-sm); }
+  .nse-table th button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  .nse-table th.nse-num, .nse-table td.nse-num { text-align: right; }
+  .nse-table td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: middle; }
+  .nse-rank tbody tr { cursor: pointer; }
+  .nse-rank tbody tr:hover, .nse-rank tbody tr:focus-visible { background: var(--color-bg); outline: none; }
+  .nse-rank tbody tr.nse-picked { background: var(--color-bg); box-shadow: inset 3px 0 0 var(--color-fg); }
+  .nse-tick { font-weight: var(--cds-font-weight-medium); }
+  .nse-scorecell { display: flex; align-items: center; gap: var(--cds-gap-xs); min-width: 6.5rem; }
+  .nse-scorecell i { display: block; height: 0.5rem; border-radius: var(--cds-radius); background: var(--cds-chart-muted); }
+  .nse-scorecell i.nse-top { background: var(--color-fg); }
+  .nse-chip { display: inline-block; padding: 0 var(--cds-pad-xs); border: 1px solid currentColor; border-radius: var(--cds-radius); font-size: var(--cds-font-size-caption); line-height: 1.5; white-space: nowrap; }
+  .nse-move { color: var(--color-fg-muted); }
+  @container nse (max-width: 40rem) { .nse-hide-narrow { display: none; } }
+  .nse-rankcard { container: nse / inline-size; }
+
+  .nse-detail h2 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); }
+  .nse-explain { margin: 0; max-width: 70ch; line-height: 1.55; }
+  .nse-two { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+  .nse-factors { display: grid; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); }
+  .nse-factor { display: grid; grid-template-columns: 7.5rem 1fr 2.5rem; align-items: center; gap: var(--cds-gap-sm); }
+  .nse-factor .nse-bar { height: 0.6rem; border-radius: var(--cds-radius); background: var(--color-bg); overflow: hidden; }
+  .nse-factor .nse-bar i { display: block; height: 100%; border-radius: var(--cds-radius); background: var(--color-fg); }
+  .nse-factor .nse-bar i.nse-none { background: transparent; }
+  .nse-factor em { font-style: normal; color: var(--color-fg-muted); }
+  .nse-chart { position: relative; min-height: 11rem; }
+  .nse-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; }
+  .nse-tip span { color: var(--cds-text-secondary); display: block; }
+  .nse-news { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); }
+  .nse-news li { display: grid; gap: 2px; }
+  .nse-news a { color: var(--color-fg); }
+  .nse-news small { color: var(--color-fg-muted); }
+
+  .nse-lower { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); align-items: start; }
+  .nse-small { max-height: 24rem; }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="nse">
+  <header class="nse-head">
+    <h1>NSE watchlist ranking</h1>
+    <p class="nse-lead">Ranked on <b data-draw="asof" data-source="summary">—</b> prices: <b data-draw="count" data-source="summary" data-field="stocks" data-row="0">—</b> Nairobi Securities Exchange stocks scored on momentum, value, dividends, earnings, risk, news and online opinion. <b data-draw="top" data-source="summary" data-field="top" data-row="0">—</b> leads the list.</p>
+    <p class="nse-note">A research tool, not financial advice. Scores come from formulas over public prices, company figures and Kenyan news; Claude Haiku explains each one and may move a stock up to five places when the news gives a reason. Online opinion counts least.</p>
+  </header>
+
+  <section class="nse-tiles" aria-label="Summary">
+    <div class="nse-tile"><span>Stocks ranked</span><b data-draw="t-stocks" data-source="summary" data-field="stocks" data-row="0">—</b></div>
+    <div class="nse-tile"><span>Strong case to buy</span><b class="nse-ok" data-draw="t-strong" data-source="summary" data-field="strong" data-row="0">—</b></div>
+    <div class="nse-tile"><span>Mixed case</span><b class="nse-warn" data-draw="t-mixed" data-source="summary" data-field="mixed" data-row="0">—</b></div>
+    <div class="nse-tile"><span>Weak case</span><b class="nse-bad" data-draw="t-weak" data-source="summary" data-field="weak" data-row="0">—</b></div>
+  </section>
+
+  <section class="nse-main">
+    <div class="nse-card nse-rankcard" id="ranking">
+      <h2>Ranking</h2>
+      <p>Score out of 100 from seven factors. Formula # is the place from the scores alone. Click a stock to see why it got its score.</p>
+      <div class="nse-controls">
+        <input id="nse-q" type="search" placeholder="Search ticker or company" aria-label="Search ticker or company">
+        <select id="nse-sector" aria-label="Sector" data-draw="sector-select" data-source="ranking"></select>
+        <select id="nse-case" aria-label="Case">
+          <option value="">All cases</option>
+          <option value="strong">Strong case</option>
+          <option value="mixed">Mixed case</option>
+          <option value="weak">Weak case</option>
+        </select>
+      </div>
+      <div class="nse-scroll">
+        <table class="nse-table nse-rank" data-source="ranking" data-row-key="ticker">
+          <thead><tr>
+            <th class="nse-num" data-field="position"><button type="button" data-sort="position">#</button></th>
+            <th data-field="ticker"><button type="button" data-sort="ticker">Ticker</button></th>
+            <th class="nse-hide-narrow" data-field="name"><button type="button" data-sort="name">Company</button></th>
+            <th data-field="score"><button type="button" data-sort="score">Score</button></th>
+            <th data-field="case"><button type="button" data-sort="case">Case</button></th>
+            <th data-field="hold"><button type="button" data-sort="hold">Hold</button></th>
+            <th class="nse-num nse-hide-narrow" data-field="ret_6m"><button type="button" data-sort="ret_6m">6-mo</button></th>
+            <th class="nse-num nse-hide-narrow" data-field="pe"><button type="button" data-sort="pe">P/E</button></th>
+            <th class="nse-num nse-hide-narrow" data-field="div_yield"><button type="button" data-sort="div_yield">Yield</button></th>
+            <th class="nse-num" data-field="price"><button type="button" data-sort="price">Price</button></th>
+            <th class="nse-num nse-hide-narrow" data-field="formula_position"><button type="button" data-sort="formula_position">Formula #</button></th>
+          </tr></thead>
+          <tbody data-draw="rank-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <article class="nse-card nse-detail" id="stock" aria-live="polite">
+      <h2 data-draw="d-title" data-source="ranking">—</h2>
+      <p class="nse-sub" data-draw="d-meta" data-source="ranking">—</p>
+      <h3>Does it make sense to buy?</h3>
+      <p class="nse-explain" data-draw="d-explain" data-source="ranking">—</p>
+      <p class="nse-sub">From the formula: <span data-draw="d-reasons" data-source="ranking">—</span></p>
+      <div class="nse-two">
+        <div>
+          <h3>Factor scores</h3>
+          <p class="nse-sub">0 to 100 against the other ranked stocks; the weight is each factor's share of the score.</p>
+          <div class="nse-factors" data-draw="d-factors" data-source="ranking method"></div>
+        </div>
+        <div>
+          <h3>Price, last 12 months</h3>
+          <p class="nse-sub">Daily close in shillings.</p>
+          <div class="nse-chart" data-draw="d-price" data-source="prices"></div>
+        </div>
+      </div>
+      <h3>News behind the score</h3>
+      <ul class="nse-news" data-draw="d-news" data-source="news"></ul>
+      <h3>Online opinion</h3>
+      <p class="nse-sub" data-draw="d-opinion" data-source="ranking">—</p>
+    </article>
+  </section>
+
+  <section class="nse-lower">
+    <div class="nse-card" id="news">
+      <h2>Recent news</h2>
+      <p>Kenyan news from the last 30 days, tagged by Haiku: good (+1) or bad (-1) for shareholders, strength 1 to 3.</p>
+      <div class="nse-scroll nse-small">
+        <table class="nse-table" data-source="news" data-row-key="id">
+          <thead><tr>
+            <th data-field="day">Date</th>
+            <th data-field="about">About</th>
+            <th class="nse-num" data-field="direction">Effect</th>
+            <th data-field="event">What happened</th>
+          </tr></thead>
+          <tbody data-draw="news-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="nse-card" id="not-ranked">
+      <h2>Not ranked</h2>
+      <p>Stocks on the watchlist that aren't scored, and why.</p>
+      <div class="nse-scroll nse-small">
+        <table class="nse-table" data-source="not_ranked" data-row-key="ticker">
+          <thead><tr>
+            <th data-field="ticker">Ticker</th>
+            <th data-field="status">Status</th>
+            <th data-field="reason">Reason</th>
+          </tr></thead>
+          <tbody data-draw="not-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="nse-card" id="method">
+      <h2>How the score works</h2>
+      <p>Each factor scores 0 to 100 against the other ranked stocks; the score is their weighted average. A factor with no data is left out, not counted as zero. Stocks that trade less than KES 100,000 a day aren't ranked.</p>
+      <div class="nse-scroll nse-small">
+        <table class="nse-table" data-source="method" data-row-key="key">
+          <thead><tr>
+            <th data-field="factor">Factor</th>
+            <th class="nse-num" data-field="weight">Weight</th>
+            <th data-field="measures">What it measures</th>
+            <th data-field="hold">Hold it points to</th>
+          </tr></thead>
+          <tbody data-draw="method-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Shared state and helpers for every drawing on this page.
+  window.nse = {
+    picked: null,
+    sort: { key: 'position', dir: 1 },
+    pct: d3.format('+.0%'),
+    pct1: d3.format('.1%'),
+    num1: d3.format('.1f'),
+    money: d3.format(',.2f'),
+    day: (s) => d3.utcFormat('%-d %b %Y')(new Date(s + 'T00:00:00Z')),
+    caseClass: { strong: 'nse-ok', mixed: 'nse-warn', weak: 'nse-bad' },
+    caseLabel: { strong: 'Strong', mixed: 'Mixed', weak: 'Weak' },
+    rows() { const r = dash.data('ranking'); return r.status === 'ok' ? r.data : []; },
+    current() { const rows = nse.rows(); return rows.find((r) => r.ticker === nse.picked) || rows[0]; },
+    pick(ticker) {
+      nse.picked = ticker;
+      ['rank-table', 'd-title', 'd-meta', 'd-explain', 'd-reasons', 'd-factors', 'd-price', 'd-news', 'd-opinion'].forEach((n) => dash.draw(n));
+    },
+    cell(tr, text, cls) { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); return td; },
+  };
+
+  dash.calc('summary', {
+    inputs: ['ranking'],
+    title: 'Ranking summary',
+    description: 'How many stocks are ranked, how many have each case, the newest price date and the top stock.',
+    fn: (ranking) => [{
+      stocks: ranking.length,
+      strong: ranking.filter((r) => r.case === 'strong').length,
+      mixed: ranking.filter((r) => r.case === 'mixed').length,
+      weak: ranking.filter((r) => r.case === 'weak').length,
+      prices_to: ranking.reduce((m, r) => (r.price_date > m ? r.price_date : m), ''),
+      top: ranking.length ? ranking[0].ticker : null,
+    }],
+  });
+
+  const summaryDraw = (field, format) => (el) => {
+    const s = dash.data('summary');
+    el.textContent = s.status === 'ok' && s.data.length && s.data[0][field] != null ? format(s.data[0][field]) : '—';
+  };
+  dash.draw('asof', summaryDraw('prices_to', (v) => nse.day(v)));
+  dash.draw('count', summaryDraw('stocks', String));
+  dash.draw('top', summaryDraw('top', String));
+  dash.draw('t-stocks', summaryDraw('stocks', String));
+  dash.draw('t-strong', summaryDraw('strong', String));
+  dash.draw('t-mixed', summaryDraw('mixed', String));
+  dash.draw('t-weak', summaryDraw('weak', String));
+</script>
+
+<script>
+  // Ranking table: search, sector and case filters, sortable columns, click to pick a stock.
+  dash.draw('sector-select', (sel) => {
+    const sectors = [...new Set(nse.rows().map((r) => r.sector))].sort();
+    const keep = sel.value;
+    sel.replaceChildren(new Option('All sectors', ''), ...sectors.map((s) => new Option(s, s)));
+    sel.value = sectors.includes(keep) ? keep : '';
+  });
+
+  document.querySelectorAll('#nse-q, #nse-sector, #nse-case').forEach((el) => {
+    el.addEventListener('input', () => dash.draw('rank-table'));
+  });
+  document.querySelectorAll('.nse-rank th button[data-sort]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.sort;
+      nse.sort = { key, dir: nse.sort.key === key ? -nse.sort.dir : (['score', 'ret_6m', 'div_yield'].includes(key) ? -1 : 1) };
+      document.querySelectorAll('.nse-rank th').forEach((th) => th.removeAttribute('aria-sort'));
+      btn.parentElement.setAttribute('aria-sort', nse.sort.dir === 1 ? 'ascending' : 'descending');
+      dash.draw('rank-table');
+    });
+  });
+
+  dash.draw('rank-table', (tbody) => {
+    const rows = nse.rows();
+    const q = (document.querySelector('#nse-q')?.value || '').trim().toLowerCase();
+    const sector = document.querySelector('#nse-sector')?.value || '';
+    const kase = document.querySelector('#nse-case')?.value || '';
+    const { key, dir } = nse.sort;
+    const shown = rows
+      .filter((r) => (!q || (r.ticker + ' ' + r.name).toLowerCase().includes(q)) && (!sector || r.sector === sector) && (!kase || r.case === kase))
+      .sort((a, b) => {
+        const x = a[key], y = b[key];
+        if (x == null && y == null) return 0;
+        if (x == null) return 1;
+        if (y == null) return -1;
+        return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * dir;
+      });
+    const top = d3.max(rows, (r) => r.score) || 100;
+    const current = nse.current();
+    tbody.replaceChildren(...shown.map((r) => {
+      const tr = document.createElement('tr');
+      tr.tabIndex = 0;
+      if (current && r.ticker === current.ticker) tr.className = 'nse-picked';
+      nse.cell(tr, r.position, 'nse-num');
+      nse.cell(tr, r.ticker, 'nse-tick');
+      nse.cell(tr, r.name, 'nse-hide-narrow');
+      const score = nse.cell(tr, '');
+      const wrap = document.createElement('span');
+      wrap.className = 'nse-scorecell';
+      const bar = document.createElement('i');
+      bar.style.width = `${(r.score / top) * 4}rem`;
+      if (r.position <= 5) bar.className = 'nse-top';
+      const val = document.createElement('span');
+      val.textContent = nse.num1(r.score);
+      wrap.append(bar, val);
+      score.appendChild(wrap);
+      const caseTd = nse.cell(tr, '');
+      if (r.case) {
+        const chip = document.createElement('span');
+        chip.className = `nse-chip ${nse.caseClass[r.case] || ''}`;
+        chip.textContent = nse.caseLabel[r.case] || r.case;
+        caseTd.appendChild(chip);
+      }
+      nse.cell(tr, r.hold || '');
+      nse.cell(tr, r.ret_6m == null ? '' : nse.pct(r.ret_6m), 'nse-num nse-hide-narrow');
+      nse.cell(tr, r.pe == null ? '' : nse.num1(r.pe), 'nse-num nse-hide-narrow');
+      nse.cell(tr, r.div_yield == null ? '' : nse.pct1(r.div_yield), 'nse-num nse-hide-narrow');
+      nse.cell(tr, nse.money(r.price), 'nse-num');
+      const formula = nse.cell(tr, r.formula_position, 'nse-num nse-hide-narrow');
+      if (r.move) formula.classList.add('nse-move');
+      tr.addEventListener('click', () => nse.pick(r.ticker));
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nse.pick(r.ticker); } });
+      return tr;
+    }));
+  });
+</script>
+
+<script>
+  // Detail panel for the picked stock.
+  dash.draw('d-title', (el) => {
+    const r = nse.current();
+    el.textContent = r ? `${r.name} (${r.ticker})` : '—';
+  });
+
+  dash.draw('d-meta', (el) => {
+    const r = nse.current();
+    if (!r) { el.textContent = '—'; return; }
+    const parts = [
+      `#${r.position} of ${nse.rows().length}`,
+      r.move ? `formula #${r.formula_position}, moved ${Math.abs(r.move)} ${r.move > 0 ? 'up' : 'down'} by Haiku` : null,
+      `score ${nse.num1(r.score)}`,
+      r.sector,
+      `KES ${nse.money(r.price)} on ${nse.day(r.price_date)}`,
+      r.hold ? `hold ${r.hold}` : null,
+    ].filter(Boolean);
+    el.replaceChildren();
+    if (r.case) {
+      const chip = document.createElement('span');
+      chip.className = `nse-chip ${nse.caseClass[r.case] || ''}`;
+      chip.textContent = `${nse.caseLabel[r.case] || r.case} case`;
+      el.append(chip, ' ');
+    }
+    el.append(parts.join(' · '));
+  });
+
+  dash.draw('d-explain', (el) => {
+    const r = nse.current();
+    el.textContent = !r ? '—' : (r.explanation || 'Haiku has not reviewed this ranking yet. The formula reasons below explain the score.');
+  });
+
+  dash.draw('d-reasons', (el) => {
+    const r = nse.current();
+    el.textContent = r ? (r.reasons || 'no factor stands out') : '—';
+  });
+
+  dash.draw('d-factors', (el) => {
+    const r = nse.current();
+    const m = dash.data('method');
+    if (!r || m.status !== 'ok') { el.replaceChildren(); return; }
+    el.replaceChildren(...m.data.map((f) => {
+      const score = r[`f_${f.key}`];
+      const row = document.createElement('div');
+      row.className = 'nse-factor';
+      const name = document.createElement('span');
+      name.textContent = `${f.factor} (${f.weight})`;
+      const bar = document.createElement('div');
+      bar.className = 'nse-bar';
+      const fill = document.createElement('i');
+      fill.style.width = `${score == null ? 0 : score}%`;
+      if (score == null) fill.className = 'nse-none';
+      bar.appendChild(fill);
+      const val = document.createElement(score == null ? 'em' : 'span');
+      val.textContent = score == null ? 'no data' : String(score);
+      row.append(name, bar, val);
+      return row;
+    }));
+  });
+
+  dash.draw('d-price', (el) => {
+    const r = nse.current();
+    const p = dash.data('prices');
+    el.replaceChildren();
+    if (!r || p.status !== 'ok') return;
+    const pts = p.data.filter((d) => d.ticker === r.ticker).map((d) => ({ date: new Date(d.day + 'T00:00:00Z'), close: +d.close }));
+    if (pts.length < 2) return;
+    const width = Math.max(240, el.clientWidth || 320);
+    const height = 176;
+    const fmt = d3.format(',.2f');
+    const yExtent = d3.extent(pts, (d) => d.close);
+    const pad = (yExtent[1] - yExtent[0]) * 0.08 || yExtent[1] * 0.05;
+    const y = d3.scaleLinear([yExtent[0] - pad, yExtent[1] + pad], [height - 22, 8]).nice(4);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img')
+      .attr('aria-label', `${r.ticker} daily close, last 12 months`);
+    const yAxis = svg.append('g').call(d3.axisLeft(y).ticks(4).tickSize(0).tickFormat(d3.format(',.0f')));
+    yAxis.attr('font-size', null).attr('font-family', null);
+    yAxis.select('.domain').remove();
+    yAxis.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    let left = 0;
+    yAxis.selectAll('text').each(function () { left = Math.max(left, this.getComputedTextLength()); });
+    left += 10;
+    yAxis.attr('transform', `translate(${left - 4},0)`);
+    const x = d3.scaleUtc(d3.extent(pts, (d) => d.date), [left, width - 6]);
+    svg.insert('g', ':first-child').selectAll('line').data(y.ticks(4)).join('line')
+      .attr('x1', left).attr('x2', width - 6).attr('y1', (d) => y(d)).attr('y2', (d) => y(d))
+      .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    const xAxis = svg.append('g').attr('transform', `translate(0,${height - 22})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(width / 90))).tickSize(0).tickFormat(d3.utcFormat('%b %y')));
+    xAxis.attr('font-size', null).attr('font-family', null);
+    xAxis.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    xAxis.selectAll('text').attr('fill', 'var(--color-fg-muted)').attr('dy', '1.1em').style('font-size', 'var(--cds-font-size-caption)');
+    const gradId = `nse-grad-${r.ticker.replace(/[^A-Za-z0-9]/g, '')}`;
+    const grad = svg.append('defs').append('linearGradient').attr('id', gradId).attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+    [[0, .26], [.25, .16], [.5, .08], [.75, .03], [1, 0]].forEach(([o, a]) => grad.append('stop').attr('offset', o).attr('style', `stop-color:${dash.colors[0]};stop-opacity:${a}`));
+    svg.append('path').datum(pts).attr('fill', `url(#${gradId})`)
+      .attr('d', d3.area().x((d) => x(d.date)).y0(height - 22).y1((d) => y(d.close)));
+    svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', dash.colors[0]).attr('stroke-width', 2)
+      .attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round')
+      .attr('d', d3.line().x((d) => x(d.date)).y((d) => y(d.close)));
+    const last = pts[pts.length - 1];
+    svg.append('circle').attr('cx', x(last.date)).attr('cy', y(last.close)).attr('r', 3).attr('fill', dash.colors[0]);
+    const dot = svg.append('circle').attr('r', 4).attr('fill', dash.colors[0]).attr('stroke', 'var(--color-panel)').attr('stroke-width', 2).style('display', 'none');
+    const tip = d3.select(el).append('div').attr('class', 'nse-tip').style('display', 'none');
+    const bisect = d3.bisector((d) => d.date).center;
+    svg.append('rect').attr('x', left).attr('y', 0).attr('width', width - left).attr('height', height).attr('fill', 'transparent')
+      .on('pointermove', (event) => {
+        const [mx] = d3.pointer(event);
+        const d = pts[bisect(pts, x.invert(mx))];
+        dot.style('display', null).attr('cx', x(d.date)).attr('cy', y(d.close));
+        tip.style('display', null).html('');
+        tip.append('span').text(d3.utcFormat('%-d %b %Y')(d.date));
+        tip.append('b').text(`KES ${fmt(d.close)}`);
+        const scale = el.clientWidth / width;
+        const tw = tip.node().offsetWidth;
+        const px = Math.min(Math.max(x(d.date) * scale - tw / 2, 0), el.clientWidth - tw);
+        tip.style('left', `${px}px`).style('top', `${Math.max(0, y(d.close) * scale - 52)}px`);
+      })
+      .on('pointerleave', () => { dot.style('display', 'none'); tip.style('display', 'none'); });
+  });
+
+  dash.draw('d-news', (el) => {
+    const r = nse.current();
+    const n = dash.data('news');
+    el.replaceChildren();
+    if (!r || n.status !== 'ok') return;
+    const items = n.data.filter((t) => t.ticker === r.ticker || (!t.ticker && t.sector === r.sector)).slice(0, 6);
+    if (!items.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No tagged news for this stock or its sector in the last 30 days.';
+      el.appendChild(li);
+      return;
+    }
+    items.forEach((t) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = t.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = t.title;
+      const meta = document.createElement('small');
+      const effect = t.direction > 0 ? 'good' : t.direction < 0 ? 'bad' : 'neutral';
+      meta.textContent = `${nse.day(t.day)} · ${t.ticker ? 'about the company' : `${t.sector} sector`} · ${effect} for shareholders, strength ${t.strength} · ${t.event}`;
+      meta.className = t.direction > 0 ? 'nse-ok' : t.direction < 0 ? 'nse-bad' : '';
+      li.append(a, meta);
+      el.appendChild(li);
+    });
+  });
+
+  dash.draw('d-opinion', (el) => {
+    const r = nse.current();
+    if (!r) { el.textContent = '—'; return; }
+    el.textContent = r.opinion_summary
+      ? `${r.opinion_summary} (${r.opinion_posts} posts on Reddit and X; lowest-weight factor.)`
+      : 'No investment talk about this stock on Reddit or X in the last 30 days.';
+  });
+</script>
+
+<script>
+  // Lower tables.
+  dash.draw('news-table', (tbody) => {
+    const n = dash.data('news');
+    const rows = n.status === 'ok' ? n.data : [];
+    tbody.replaceChildren(...rows.map((t) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = t.id;
+      nse.cell(tr, nse.day(t.day));
+      nse.cell(tr, t.about);
+      nse.cell(tr, t.direction > 0 ? '+1' : String(t.direction), `nse-num ${t.direction > 0 ? 'nse-ok' : t.direction < 0 ? 'nse-bad' : ''}`);
+      const td = nse.cell(tr, '');
+      const a = document.createElement('a');
+      a.href = t.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = t.event;
+      td.appendChild(a);
+      return tr;
+    }));
+  });
+
+  dash.draw('not-table', (tbody) => {
+    const n = dash.data('not_ranked');
+    const rows = n.status === 'ok' ? n.data : [];
+    tbody.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr');
+      nse.cell(tr, r.ticker, 'nse-tick');
+      nse.cell(tr, r.status);
+      nse.cell(tr, r.reason);
+      return tr;
+    }));
+  });
+
+  dash.draw('method-table', (tbody) => {
+    const m = dash.data('method');
+    const rows = m.status === 'ok' ? m.data : [];
+    tbody.replaceChildren(...rows.map((f) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = f.key;
+      nse.cell(tr, f.factor);
+      nse.cell(tr, String(f.weight), 'nse-num');
+      nse.cell(tr, f.measures);
+      nse.cell(tr, f.hold || '');
+      return tr;
+    }));
+  });
+
+  // A link to #ranking, #stock, #news, #not-ranked or #method scrolls there once drawn.
+  dash.onData(() => {
+    const named = document.getElementById(location.hash.slice(1));
+    if (named && !window.nseScrolled && nse.rows().length) { window.nseScrolled = true; named.scrollIntoView(); dash.setLink(named.id); }
+  });
+</script>
