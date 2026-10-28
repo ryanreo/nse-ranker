@@ -13,6 +13,7 @@ import re
 from datetime import date
 
 from . import haiku
+from .scoring import WEIGHTS
 
 MAX_MOVE = 5
 OPINION_MAX_MOVE = 1
@@ -41,8 +42,7 @@ How the factors work, so you can explain them correctly:
   not that earnings are poor.
 - risk: how much the price moves day to day; 100 is calmest.
 - A null factor is missing data and is left out of the score, not counted as zero.
-The score is the weighted average of the available factors: momentum 25, value 20, dividend 20,
-quality 15, risk 10, news 7, online opinion 3.
+The score is the weighted average of the available factors: {", ".join(f"{name} {weight}" for name, weight in WEIGHTS.items())}.
 
 For EVERY stock, answer "does it make sense to buy?":
 - case: how well the data supports owning it, using these definitions:

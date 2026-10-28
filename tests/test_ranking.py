@@ -29,16 +29,17 @@ class TestReasons(unittest.TestCase):
 
 
 class TestHoldTime(unittest.TestCase):
-    def test_momentum_driven_stock_is_short_term(self):
-        self.assertEqual(ranking.hold_time(result(momentum=100, value=20, dividend=20, risk=50)), "3-6 months")
+    def test_momentum_driven_stock_is_6_to_12_months(self):
+        # the backtest found momentum only pays over 6-12 months on the NSE
+        self.assertEqual(ranking.hold_time(result(momentum=100, value=20, dividend=20, risk=50)), "6-12 months")
 
     def test_value_and_dividend_driven_stock_is_long_term(self):
-        # momentum 25 x 60 = 1500 vs value + dividend (20 x 80) x 2 = 3200
+        # 6-12 group: momentum 15 x 60 + risk 20 x 50 = 1900; 12+ group: (20 x 80) x 2 = 3200
         self.assertEqual(ranking.hold_time(result(momentum=60, value=80, dividend=80, risk=50)), "12+ months")
 
     def test_quality_and_risk_combine(self):
-        # quality 15 x 90 + risk 10 x 90 = 2250 beats momentum 25 x 80 = 2000
-        self.assertEqual(ranking.hold_time(result(momentum=80, quality=90, risk=90)), "6-12 months")
+        # 6-12 group: momentum 15 x 30 + quality 15 x 90 + risk 20 x 90 = 3600; 12+ group: 20 x 70 = 1400
+        self.assertEqual(ranking.hold_time(result(momentum=30, value=70, quality=90, risk=90)), "6-12 months")
 
     def test_no_factors_no_hold_time(self):
         self.assertIsNone(ranking.hold_time(result()))

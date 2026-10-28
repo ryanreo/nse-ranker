@@ -34,14 +34,14 @@ backtest (section 8), not settled facts.
 
 ### What this means for our scoring
 
-| Factor | How we measure it | Starting weight | Why |
+| Factor | How we measure it | Weight (start → after backtest) | Why |
 |---|---|---|---|
 | **Liquidity** | average daily traded value (KES) over 60 days | **gate**, not points | below the threshold → "watch only", not ranked |
-| Momentum | price return over the last 6 months, skipping the most recent month | 25 | strongest NSE evidence (3–6 month horizon) |
+| Momentum | price return over the last 6 months, skipping the most recent month | 25 → **15** | NSE studies found it; our backtest found it weaker than calm prices, and only over 6–12 months |
 | Value | P/E and price-to-book, compared **within the sector** | 20 | strong in frontier studies, mixed on the NSE |
 | Dividend | yield, only counted if EPS covers the dividend (payout ≤ 100%) | 20 | income matters to NSE investors; the cover check avoids yield traps |
 | Quality | EPS growth and stability over recent years | 15 | profitability is a factor in the African study |
-| Risk | lower 6-month volatility scores higher | 10 | protects against the wildest counters |
+| Risk | lower 6-month volatility scores higher | 10 → **20** | the backtest's most reliable factor on the NSE (docs/BACKTEST.md) |
 | News | events from Kenyan news (results, dividends, policy), capped | 7 | real information, but noisy |
 | **Online opinion** | what people and analysts say on X, Reddit, YouTube | **3 (lowest)** | can nudge a score but can't decide a ranking |
 

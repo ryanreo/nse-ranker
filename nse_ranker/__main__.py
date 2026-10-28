@@ -108,9 +108,9 @@ def show_ranking(db, top, save, use_ai):
     if len(ranked) > top:
         print(f"... and {len(ranked) - top} more (use --top {len(ranked)} to see all).")
         print()
-    print("Hold: a guide from what drives each score (momentum 3-6 months, earnings growth and calm")
-    print("prices 6-12 months, cheapness and dividends 12+ months). Re-rank monthly; if a stock drops")
-    print("out of the top half, the reason you bought it has probably faded.")
+    print("Hold: a guide from what drives each score (momentum, earnings growth and calm prices 6-12 months,")
+    print("cheapness and dividends 12+ months). The backtest found holds under 6 months lose the edge to")
+    print("trading costs. Re-rank monthly; if a stock drops out of the top half, its reason has probably faded.")
     print("Formula: the position from the scores alone. Haiku can move a stock up to 5 places, only")
     print("when news (or, at most 1 place, online opinion) gives a reason the numbers can't see.")
     if not readings:

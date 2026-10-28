@@ -60,6 +60,8 @@ it never saw.
 at every hold (61–62% against 55–58%), though its average edge at 12 months was a little lower.
 
 ## Recommendations
+Recommendations 1 and 2 were applied on 28 Oct 2026.
+
 1. **Shift weight from momentum to risk**: momentum 15, risk 20 (total unchanged at 35).
 2. **Change momentum's hold time from 3–6 months to 6–12 months.**
 3. **Hold at least 6 months.** Re-ranking monthly is fine for watching, but trading on monthly changes loses

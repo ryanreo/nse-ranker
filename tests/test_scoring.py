@@ -91,7 +91,8 @@ class TestScoreAll(unittest.TestCase):
     def test_missing_factors_are_left_out_not_counted_as_zero(self):
         result = scoring.score_all([self.stock("A", 10, 20), self.stock("B", 10, 15)])[0]
         self.assertIsNone(result["factors"]["quality"])
-        self.assertEqual(result["weight_used"], 25 + 20 + 20 + 10)   # no quality, news, opinion
+        w = scoring.WEIGHTS
+        self.assertEqual(result["weight_used"], w["momentum"] + w["value"] + w["dividend"] + w["risk"])   # no quality, news, opinion
 
     def test_opinion_can_only_nudge_the_score(self):
         base = dict(start=10, end=12)

@@ -1,17 +1,19 @@
 """Turn prices and fundamentals into factor scores and one weighted score per stock.
 
 The factors, weights and the evidence behind them are in docs/RESEARCH.md (R1).
+Momentum and risk were rebalanced from 25:10 to 15:20 after the backtest (docs/BACKTEST.md):
+calm prices beat the market more reliably on the NSE than past winners did.
 Every factor score is 0-100, ranked against the other stocks that pass the liquidity gate.
 A factor with no data for a stock is left out, and the other weights are scaled up to fill in.
 """
 from statistics import median, pstdev
 
 WEIGHTS = {
-    "momentum": 25,
+    "momentum": 15,
     "value": 20,
     "dividend": 20,
     "quality": 15,
-    "risk": 10,
+    "risk": 20,
     "news": 7,
     "opinion": 3,   # online chatter: the lowest weight, never decides a ranking
 }

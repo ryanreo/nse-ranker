@@ -73,10 +73,10 @@ def reasons(result):
 
 
 # Each factor tends to pay off over a different time span (docs/RESEARCH.md, R1):
-# momentum on the NSE lasts about 3-6 months; cheapness and dividends take a year or more;
-# earnings growth and calm prices sit in between, roughly until the next results.
+# the backtest found momentum on the NSE only pays over 6-12 months (docs/BACKTEST.md);
+# cheapness and dividends take a year or more; earnings growth and calm prices sit in between.
 HOLD_PERIODS = {
-    "momentum": "3-6 months",
+    "momentum": "6-12 months",
     "quality": "6-12 months",
     "risk": "6-12 months",
     "value": "12+ months",
