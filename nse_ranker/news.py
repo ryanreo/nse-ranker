@@ -171,13 +171,21 @@ def sitemap_urls(xml_bytes):
     return found
 
 
-def read_sitemap_source(db, source, since, limit, url_filter=None):
+def read_sitemap_source(db, source, since, limit, url_filter=None, newest_lists=None, matcher=None,
+                        progress=None):
     """New articles from a sitemap source: recent posts not already stored, at most `limit` pages.
 
-    url_filter, if given, is a regex the post's address must match (e.g. results stories only).
+    url_filter: a regex the post's address must match (e.g. results stories only).
+    newest_lists: only read the N highest-numbered post lists (posts-11.xml, posts-10.xml...). A site may
+      refresh old posts' dates in bulk, so "modified since" alone can pull in years of archive.
+    matcher: if given, each article is saved as soon as it's read (old ones too, so a rerun skips them),
+      making a long backfill resumable.
     """
     index = sitemap_urls(web.get(source["sitemap"], delay=2) or b"<urlset/>")
     children = [(u, m) for u, m in index if m[:10] >= since]   # child sitemaps changed in the window
+    if newest_lists:
+        number = lambda u: int((re.findall(r"(\d+)\.xml$", u) or ["0"])[0])
+        children = sorted(children, key=lambda c: -number(c[0]))[:newest_lists]
     known = {u for (u,) in db.execute("SELECT url FROM articles")}
     wanted = []
     for child, _ in children:
@@ -186,11 +194,16 @@ def read_sitemap_source(db, source, since, limit, url_filter=None):
                     and (not url_filter or re.search(url_filter, url.rsplit("/", 1)[-1], re.I)):
                 wanted.append((lastmod, url))
     articles = []
-    for _, url in sorted(wanted, reverse=True)[:limit]:   # newest first
+    chosen = sorted(wanted, reverse=True)[:limit]   # newest first
+    for i, (_, url) in enumerate(chosen, 1):
         page = web.get(url, delay=2)
         article = parse_article_page(page.decode("utf-8", errors="replace"), url, source) if page else None
+        if article and matcher:
+            save_articles(db, [article], matcher)
         if article and article["published"][:10] >= since:
             articles.append(article)
+        if progress and i % 20 == 0:
+            progress(f"  {source['name']}: {i}/{len(chosen)} pages read, {len(articles)} in range")
     return articles
 
 
@@ -231,17 +244,18 @@ def fetch_all(db, backfill=False, days=30):
 RESULTS_WORDS = r"(profit|earnings|eps|results|net-income|loss|half-year|h1|fy-?20|dividend|interim|full-year|pat-)"
 
 
-def fetch_results(db, since):
+def fetch_results(db, since, newest_lists=4, progress=print):
     """Backfill results stories (profit, earnings, dividends) from sitemap sources back to `since`,
-    so earnings per share can be read from them. Returns {source: (items, new)}."""
+    so earnings per share can be read from them. Saves as it goes. Returns {source: articles in range}."""
     db.executescript(SCHEMA)
     config = load_config()
     matcher = Matcher(load_watchlist(), config["topics"])
     report = {}
     for source in config["source"]:
         if "sitemap" in source:
-            articles = read_sitemap_source(db, source, since, limit=400, url_filter=RESULTS_WORDS)
-            report[source["name"]] = (len(articles), save_articles(db, articles, matcher))
+            articles = read_sitemap_source(db, source, since, limit=400, url_filter=RESULTS_WORDS,
+                                           newest_lists=newest_lists, matcher=matcher, progress=progress)
+            report[source["name"]] = len(articles)
     return report
 
 
