@@ -171,15 +171,19 @@ def sitemap_urls(xml_bytes):
     return found
 
 
-def read_sitemap_source(db, source, since, limit):
-    """New articles from a sitemap source: recent posts not already stored, at most `limit` pages."""
+def read_sitemap_source(db, source, since, limit, url_filter=None):
+    """New articles from a sitemap source: recent posts not already stored, at most `limit` pages.
+
+    url_filter, if given, is a regex the post's address must match (e.g. results stories only).
+    """
     index = sitemap_urls(web.get(source["sitemap"], delay=2) or b"<urlset/>")
     children = [(u, m) for u, m in index if m[:10] >= since]   # child sitemaps changed in the window
     known = {u for (u,) in db.execute("SELECT url FROM articles")}
     wanted = []
     for child, _ in children:
         for url, lastmod in sitemap_urls(web.get(child, delay=2) or b"<urlset/>"):
-            if lastmod[:10] >= since and clean_url(url) not in known:
+            if lastmod[:10] >= since and clean_url(url) not in known \
+                    and (not url_filter or re.search(url_filter, url.rsplit("/", 1)[-1], re.I)):
                 wanted.append((lastmod, url))
     articles = []
     for _, url in sorted(wanted, reverse=True)[:limit]:   # newest first
@@ -221,6 +225,23 @@ def fetch_all(db, backfill=False, days=30):
             articles = read_feed_source(source, since, backfill)
         report[source["name"]] = (len(articles), save_articles(db, articles, matcher))
     rematch(db, matcher)
+    return report
+
+
+RESULTS_WORDS = r"(profit|earnings|eps|results|net-income|loss|half-year|h1|fy-?20|dividend|interim|full-year|pat-)"
+
+
+def fetch_results(db, since):
+    """Backfill results stories (profit, earnings, dividends) from sitemap sources back to `since`,
+    so earnings per share can be read from them. Returns {source: (items, new)}."""
+    db.executescript(SCHEMA)
+    config = load_config()
+    matcher = Matcher(load_watchlist(), config["topics"])
+    report = {}
+    for source in config["source"]:
+        if "sitemap" in source:
+            articles = read_sitemap_source(db, source, since, limit=400, url_filter=RESULTS_WORDS)
+            report[source["name"]] = (len(articles), save_articles(db, articles, matcher))
     return report
 
 
