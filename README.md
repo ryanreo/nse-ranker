@@ -23,11 +23,26 @@ python -m nse_ranker prices update      # today's closes, after 15:30 Nairobi ti
 python -m nse_ranker prices status      # what's stored
 python -m nse_ranker news fetch         # read the news feeds in news.toml (run daily)
 python -m nse_ranker news show KCB      # one stock's news; without a ticker, mentions per stock
-python -m nse_ranker rank               # the ranked list, with reasons (--top N, --no-save)
+python -m nse_ranker news tag           # Haiku reads and tags new articles (rank also does this)
+python -m nse_ranker opinion fetch      # Reddit and X posts per stock, summarised by Haiku
+python -m nse_ranker rank               # ranked list with Haiku's review (--top N, --no-save, --no-ai)
 python -m unittest                      # tests
 ```
 Prices and articles are stored in `data/nse.sqlite` (not committed). The feeds only hold the last day
 or two of stories, so news builds up from the day you start running `news fetch`.
+
+### How Haiku is used
+Haiku runs through the `claude` CLI (`claude -p --model haiku`), with no tools, and replies in checked JSON.
+1. **News tags:** Haiku reads matched articles and tags each one: stock or sector, good or bad, how strong,
+   and an exact quote. Tags whose quote isn't in the article are dropped. Each article is read once.
+   Business Daily and Nation text is never sent (their sites say reference use only).
+2. **Online opinion:** posts from Reddit (OpenCLI, through your logged-in Chrome) and X (Agent-Reach's
+   `twitter`, with `TWITTER_AUTH_TOKEN` and `TWITTER_CT0` in `.env`). Haiku summarises them and flags hype.
+   It's the lowest-weight factor (3 points), and hype counts half.
+3. **Review ("does it make sense to buy?"):** Haiku explains every stock's score and rates the case as
+   strong, mixed or weak. It may move a stock up to 5 places from the formula order. A move must cite news
+   or opinion, since the factor numbers are already in the score, and a move backed only by online opinion
+   is capped at 1 place. Both the formula position and the final position are shown.
 
 ## Data credits
 - Historical prices 2007-2025: Wanjawa, B., *Kenya Nairobi Securities Exchange (NSE) All Stocks Prices*,
@@ -44,5 +59,5 @@ or two of stories, so news builds up from the day you start running `news fetch`
 - [x] 4. Scoring criteria (researched)
 - [x] 5. Ranking command
 - [x] 6. Kenyan news scraper
-- [ ] 7. Haiku insight layer (Agent-Reach, X)
+- [x] 7. Haiku insight layer (Agent-Reach, Reddit, X)
 - [ ] 8. Backtest the score
