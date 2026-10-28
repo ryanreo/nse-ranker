@@ -5,7 +5,7 @@ import textwrap
 from collections import Counter
 from datetime import date
 
-from . import backtest, export, supabase, haiku, insights, news, opinion, prices, ranking, review, store
+from . import backtest, export, serve, supabase, haiku, insights, news, opinion, prices, ranking, review, store
 from .watchlist import load_watchlist, rankable
 
 STALE_AFTER_DAYS = 4   # warn if the newest price is older than this
@@ -219,6 +219,9 @@ def main():
     backtest_cmd = commands.add_parser("backtest", help="test the price-based score on NSE history")
     backtest_cmd.add_argument("--from", dest="first_year", type=int, default=2008)
 
+    serve_cmd = commands.add_parser("serve", help="run the dashboard on localhost from the exported data")
+    serve_cmd.add_argument("--port", type=int, default=8000)
+
     export_cmd = commands.add_parser("export", help="write the ranking as JSON files for the dashboard")
     export_cmd.add_argument("--no-ai", action="store_true", help="formula order only, no Haiku")
     export_cmd.add_argument("--push", action="store_true", help="also push the tables to Supabase")
@@ -248,6 +251,8 @@ def main():
         show_ranking(store.connect(), args.top, save=not args.no_save, use_ai=not args.no_ai)
     elif args.command == "backtest":
         show_backtest(store.connect(), args.first_year)
+    elif args.command == "serve":
+        serve.run(args.port)
     elif args.command == "export":
         db = store.connect()
         run = full_ranking(db, not args.no_ai, date.today())

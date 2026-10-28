@@ -1,0 +1,66 @@
+/* Theme for running dashboard/index.html on localhost: the colour, type and spacing tokens the online
+   dashboard provides. Light by default, dark when the system prefers it. */
+:root {
+  --color-fg: #1d2127;
+  --color-fg-muted: #626a75;
+  --color-bg: #f2f3f1;
+  --color-panel: #ffffff;
+  --color-border-line: #dfe1dc;
+  --color-ok: #2f7d47;
+  --color-warn: #a86a12;
+  --color-bad: #b23b3b;
+  --cds-chart-muted: #b9bec6;
+  --cds-chart-grid: #e8eae6;
+  --cds-chart-axis: #b9bec6;
+  --cds-chart-reference: #8a919b;
+  --cds-surface-popover: #ffffff;
+  --cds-border: #dfe1dc;
+  --cds-shadow-popover: 0 4px 16px rgba(20, 24, 30, 0.12);
+  --cds-text-secondary: #626a75;
+  --font-anthropic-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-anthropic-serif: "Source Serif 4", "Georgia", "Times New Roman", serif;
+  --cds-font-size-caption: 0.8125rem;
+  --cds-font-size-body: 0.9375rem;
+  --cds-font-size-heading: 1.125rem;
+  --cds-font-size-title: 1.75rem;
+  --cds-font-weight-medium: 600;
+  --cds-gap-xs: 0.25rem;
+  --cds-gap-sm: 0.5rem;
+  --cds-gap-md: 1rem;
+  --cds-gap-lg: 1.5rem;
+  --cds-pad-xs: 0.25rem;
+  --cds-pad-sm: 0.5rem;
+  --cds-pad-md: 0.75rem;
+  --cds-pad-lg: 1.25rem;
+  --cds-radius: 6px;
+  --cds-dur-slow: 300ms;
+  --cds-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-fg: #e8eaed;
+    --color-fg-muted: #9aa1ab;
+    --color-bg: #15171a;
+    --color-panel: #1e2125;
+    --color-border-line: #30343a;
+    --color-ok: #6cc28a;
+    --color-warn: #e0a84a;
+    --color-bad: #ef7f7f;
+    --cds-chart-muted: #4a5058;
+    --cds-chart-grid: #2a2e33;
+    --cds-chart-axis: #4a5058;
+    --cds-chart-reference: #7d848e;
+    --cds-surface-popover: #262a2f;
+    --cds-border: #30343a;
+    --cds-shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --cds-text-secondary: #9aa1ab;
+    color-scheme: dark;
+  }
+}
+[hidden] { display: none !important; }   /* the online dashboard has this rule built in */
+html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); font-size: 15px; }
+#dash-root { max-width: 96rem; margin-inline: auto; padding: 1.5rem max(16px, 2vw) 3rem; }
+#local-status { color: var(--color-bad); font-size: var(--cds-font-size-caption); margin: 0 0 1rem; }
+#local-status:empty { display: none; }
+a { color: inherit; }

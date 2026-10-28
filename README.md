@@ -28,6 +28,7 @@ python -m nse_ranker news tag           # Haiku reads and tags new articles (ran
 python -m nse_ranker opinion fetch      # Reddit and X posts per stock, summarised by Haiku (--refresh)
 python -m nse_ranker rank               # ranked list with Haiku's review (--top N, --no-save, --no-ai)
 python -m nse_ranker export --push      # write the dashboard tables and push them to Supabase
+python -m nse_ranker serve              # the dashboard on http://localhost:8000, from the last export
 python -m nse_ranker backtest           # test momentum and risk on 2008-2026 history
 python -m unittest                      # tests
 ```
