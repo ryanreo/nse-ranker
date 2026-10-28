@@ -6,6 +6,13 @@
   .nse-lead { margin: 0; max-width: 70ch; color: var(--color-fg); }
   .nse-note { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); max-width: 70ch; }
   .nse b { font-weight: var(--cds-font-weight-medium); }
+  .nse-guide-toggle { all: unset; cursor: pointer; color: var(--color-fg); text-decoration: underline; text-decoration-color: var(--color-border-line); text-underline-offset: 3px; }
+  .nse-guide-toggle:hover { text-decoration-color: currentColor; }
+  .nse-guide-toggle:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; border-radius: 2px; }
+  .nse-guide { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); padding: var(--cds-pad-lg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); font-size: var(--cds-font-size-caption); }
+  .nse-guide h3 { margin: 0 0 var(--cds-gap-xs); font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .nse-guide p { margin: 0; color: var(--color-fg-muted); line-height: 1.5; }
+  .nse-foot { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); max-width: 80ch; }
 
   .nse-tiles { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
   .nse-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); }
@@ -89,10 +96,37 @@
 
 <div class="nse">
   <header class="nse-head">
-    <h1>NSE watchlist ranking</h1>
+    <h1>NSE Watchlist</h1>
     <p class="nse-lead">Ranked on <b data-draw="asof" data-source="summary">—</b> prices: <b data-draw="count" data-source="summary" data-field="stocks" data-row="0">—</b> Nairobi Securities Exchange stocks scored on momentum, value, dividends, earnings, risk, news and online opinion. <b data-draw="top" data-source="summary" data-field="top" data-row="0">—</b> leads the list.</p>
-    <p class="nse-note">A research tool, not financial advice. Scores come from formulas over public prices, company figures and Kenyan news; Claude Haiku explains each one and may move a stock up to five places when the news gives a reason. Online opinion counts least.</p>
+    <p class="nse-note">A research tool, not financial advice. Scores come from formulas over public prices, company figures and Kenyan news; Claude Haiku explains each one and may move a stock up to five places when the news gives a reason. Online opinion counts least. <button type="button" class="nse-guide-toggle" aria-expanded="false" aria-controls="guide">New here? How to read this page</button></p>
   </header>
+
+  <section class="nse-guide" id="guide" aria-label="How to read this page" hidden>
+    <div>
+      <h3>The score</h3>
+      <p>Each stock gets 0 to 100 from seven factors, each judged against the other ranked stocks: price momentum, value, dividends, earnings growth, how calm the price is, recent news and online talk. "How the score works" at the bottom lists the weights. Stocks that barely trade aren't ranked.</p>
+    </div>
+    <div>
+      <h3>Strong, mixed, weak</h3>
+      <p>Haiku's answer to "does it make sense to buy?". Strong means a high score backed by several factors and no clearly bad recent news; weak means a low score, one factor doing all the work, or bad news. Most stocks are mixed.</p>
+    </div>
+    <div>
+      <h3>Hold and Formula #</h3>
+      <p>Hold is how long the score's main reasons have tended to take to pay off. Formula # is the place from the numbers alone; Haiku can move a stock a few places only when news gives a concrete reason.</p>
+    </div>
+    <div>
+      <h3>Click a stock</h3>
+      <p>Overview explains the score with a price chart. Analysis has returns, the 52-week range, trend, volatility and how it compares with its sector. News lists what Haiku read and other headlines. People talking shows posts from Reddit and X, with usernames hidden.</p>
+    </div>
+    <div>
+      <h3>Where it comes from</h3>
+      <p>NSE prices and company figures from public sources, news from Kenyan Wall Street, Capital FM, The Standard and Business Daily headlines, and posts from Reddit and X. Data can be delayed, incomplete or wrong.</p>
+    </div>
+    <div>
+      <h3>What it can't do</h3>
+      <p>Tested on past NSE prices, the method picked slightly better stocks more often than not, which is no promise about the future. It doesn't know your goals or finances. It isn't financial advice: check with a CMA-licensed adviser before you invest.</p>
+    </div>
+  </section>
 
   <section class="nse-tiles" aria-label="Summary">
     <div class="nse-tile"><span>Stocks ranked</span><b data-draw="t-stocks" data-source="summary" data-field="stocks" data-row="0">—</b></div>
@@ -272,6 +306,8 @@
       </div>
     </div>
   </section>
+
+  <p class="nse-foot">Not financial advice. This page ranks stocks from public data and AI summaries for research; it can be out of date or wrong, and past results don't predict future ones. Make your own decisions, ideally with a CMA-licensed adviser.</p>
 </div>
 
 <script>
@@ -329,6 +365,15 @@
       kes: (v) => `KES ${Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`,
     },
   };
+
+  // "New here?" opens and closes the guide.
+  document.querySelectorAll('.nse-guide-toggle').forEach((button) => {
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.querySelectorAll('#guide').forEach((guide) => { guide.hidden = !open; });
+    });
+  });
 
   // Tabs in the stock panel: show one pane, hide the others.
   document.querySelectorAll('.nse-tabs [role="tab"]').forEach((tab) => {
