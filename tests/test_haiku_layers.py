@@ -142,6 +142,19 @@ class TestOpinion(unittest.TestCase):
         self.assertEqual(seen, [("SCOM", 2)])   # KCB has only 1 post: below MIN_POSTS, no Haiku call
         self.assertEqual(list(opinion.latest(db)), ["SCOM"])
 
+    def test_posts_are_saved_without_usernames(self):
+        posts = [dict(p, author="secret_handle", posted="2026-10-27") for p in self.POSTS]
+        db = store.connect(":memory:")
+        fake = lambda *_: {"investment_posts": 2, "sentiment": 0.1, "hype": False, "summary": "s",
+                           "quotes": [{"post": 0, "quote": "dividend looks safe"}]}
+        opinion.collect(db, [self.STOCK], sources={}, bulk_sources={"Reddit": lambda: (posts, None)},
+                        ask=fake, progress=lambda m: None)
+        saved = db.execute("SELECT * FROM opinion_posts").fetchall()
+        self.assertEqual(len(saved), 2)
+        self.assertNotIn("secret_handle", repr(saved))
+        columns = [c[1] for c in db.execute("PRAGMA table_info(opinion_posts)")]
+        self.assertNotIn("author", columns)
+
     def test_reddit_reader_keeps_recent_posts_only(self):
         from types import SimpleNamespace
         listing = json.dumps([

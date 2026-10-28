@@ -35,6 +35,17 @@ CREATE TABLE IF NOT EXISTS opinions (
     quotes    TEXT NOT NULL,      -- JSON list of {quote, url}
     PRIMARY KEY (ticker, date)
 );
+-- The posts behind each reading, for the dashboard. Usernames are never stored; the link is kept
+-- only to avoid saving a post twice and isn't exported.
+CREATE TABLE IF NOT EXISTS opinion_posts (
+    ticker   TEXT NOT NULL,
+    platform TEXT NOT NULL,       -- "Reddit" or "X"
+    posted   TEXT,                -- YYYY-MM-DD when known
+    text     TEXT NOT NULL,
+    url      TEXT NOT NULL,
+    fetched  TEXT NOT NULL,
+    PRIMARY KEY (ticker, platform, text)
+);
 """
 
 INSTRUCTIONS = """You summarise what people on Reddit and X say about one stock on the Nairobi Securities Exchange.
@@ -135,7 +146,7 @@ def from_x(stock, run=subprocess.run, now=None):
         text, posted = _first(item, "text"), _x_date(item.get("created_at"))
         if text and (posted is None or posted >= cutoff):
             posts.append({"platform": "X", "author": _first(item, "author"), "text": text,
-                          "url": _first(item, "url")})
+                          "url": _first(item, "url"), "posted": posted.date().isoformat() if posted else None})
     return posts, None
 
 
@@ -163,7 +174,8 @@ def reddit_posts(run=subprocess.run, now=None):
             text = " ".join(filter(None, [_first(item, "title"), _first(item, "selftext", "body", "text")]))
             if text and created >= cutoff:
                 posts.append({"platform": "Reddit", "author": _first(item, "author"), "text": text,
-                              "url": _first(item, "url", "permalink")})
+                              "url": _first(item, "url", "permalink"),
+                              "posted": datetime.fromtimestamp(created, timezone.utc).date().isoformat()})
     return posts, None
 
 
@@ -201,8 +213,20 @@ def summarise(stock, posts, ask=haiku.ask):
             "summary": answer["summary"], "quotes": quotes}
 
 
-def collect(db, stocks, sources=SOURCES, bulk_sources=BULK_SOURCES, ask=haiku.ask, progress=print):
-    """Fetch posts and store Haiku's summary for each stock. Returns the problems met, once each."""
+def save_posts(db, ticker, posts, today):
+    """Keep each post's platform, date and text (never the username) for the dashboard."""
+    db.executemany(
+        "INSERT OR IGNORE INTO opinion_posts (ticker, platform, posted, text, url, fetched) VALUES (?, ?, ?, ?, ?, ?)",
+        [(ticker, p["platform"], p.get("posted"), p["text"], p.get("url") or "", today) for p in posts])
+    db.commit()
+
+
+def collect(db, stocks, sources=SOURCES, bulk_sources=BULK_SOURCES, ask=haiku.ask, progress=print,
+            refresh=False):
+    """Fetch posts and store them and Haiku's summary for each stock. Returns the problems met, once each.
+
+    A rerun the same day skips stocks already done; with refresh, only stocks whose posts were saved today.
+    """
     db.executescript(SCHEMA)
     today = date.today().isoformat()
     problems, broken = [], set()
@@ -216,7 +240,9 @@ def collect(db, stocks, sources=SOURCES, bulk_sources=BULK_SOURCES, ask=haiku.as
         for ticker, matched in match_posts(posts, stocks).items():
             bulk.setdefault(ticker, []).extend(matched)
     failures = {}   # consecutive one-off failures per source
-    done_today = {t for (t,) in db.execute("SELECT ticker FROM opinions WHERE date = ?", (today,))}
+    done_today = {t for (t,) in db.execute("SELECT ticker FROM opinion_posts WHERE fetched = ?", (today,))}
+    if not refresh:
+        done_today |= {t for (t,) in db.execute("SELECT ticker FROM opinions WHERE date = ?", (today,))}
     for i, stock in enumerate(stocks, 1):
         if stock["ticker"] in done_today:   # a rerun picks up where the last one stopped
             continue
@@ -234,6 +260,7 @@ def collect(db, stocks, sources=SOURCES, bulk_sources=BULK_SOURCES, ask=haiku.as
             else:
                 failures[name] = 0
             posts += found
+        save_posts(db, stock["ticker"], posts, today)
         if len(posts) >= MIN_POSTS:
             reading = summarise(stock, posts, ask)
             if reading:

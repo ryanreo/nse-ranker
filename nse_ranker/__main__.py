@@ -208,7 +208,8 @@ def main():
 
     opinion_cmd = commands.add_parser("opinion", help="online opinion from Reddit and X")
     opinion_actions = opinion_cmd.add_subparsers(dest="action", required=True)
-    opinion_actions.add_parser("fetch", help="search Reddit and X for each ranked stock; Haiku summarises")
+    opinion_fetch = opinion_actions.add_parser("fetch", help="search Reddit and X for each ranked stock; Haiku summarises")
+    opinion_fetch.add_argument("--refresh", action="store_true", help="fetch again even if done today")
 
     rank_cmd = commands.add_parser("rank", help="rank the watchlist from stored data")
     rank_cmd.add_argument("--top", type=int, default=20, help="how many to show (default 20)")
@@ -238,7 +239,7 @@ def main():
     elif args.command == "opinion":
         db = store.connect()
         ranked = [s for s in load_watchlist() if s["status"] == "rank"]
-        problems = opinion.collect(db, ranked)
+        problems = opinion.collect(db, ranked, refresh=args.refresh)
         for problem in problems:
             print(f"! {problem}")
         print(f"Opinion stored for {len(opinion.latest(db))} stocks.")
