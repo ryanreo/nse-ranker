@@ -21,10 +21,13 @@ python -m nse_ranker prices eodhd       # fill 2026 from EODHD (needs EODHD_API_
 python -m nse_ranker prices recent      # last ~2 weeks from afx (1 stock a minute)
 python -m nse_ranker prices update      # today's closes, after 15:30 Nairobi time
 python -m nse_ranker prices status      # what's stored
+python -m nse_ranker news fetch         # read the news feeds in news.toml (run daily)
+python -m nse_ranker news show KCB      # one stock's news; without a ticker, mentions per stock
 python -m nse_ranker rank               # the ranked list, with reasons (--top N, --no-save)
 python -m unittest                      # tests
 ```
-Prices are stored in `data/nse.sqlite` (not committed).
+Prices and articles are stored in `data/nse.sqlite` (not committed). The feeds only hold the last day
+or two of stories, so news builds up from the day you start running `news fetch`.
 
 ## Data credits
 - Historical prices 2007-2025: Wanjawa, B., *Kenya Nairobi Securities Exchange (NSE) All Stocks Prices*,
@@ -40,6 +43,6 @@ Prices are stored in `data/nse.sqlite` (not committed).
 - [x] 3. Price data layer
 - [x] 4. Scoring criteria (researched)
 - [x] 5. Ranking command
-- [ ] 6. Kenyan news scraper
+- [x] 6. Kenyan news scraper
 - [ ] 7. Haiku insight layer (Agent-Reach, X)
 - [ ] 8. Backtest the score

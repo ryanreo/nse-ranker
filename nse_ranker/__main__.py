@@ -3,7 +3,7 @@ import argparse
 from collections import Counter
 from datetime import date
 
-from . import prices, ranking, store
+from . import news, prices, ranking, store
 from .watchlist import load_watchlist, rankable
 
 STALE_AFTER_DAYS = 4   # warn if the newest price is older than this
@@ -83,6 +83,32 @@ def show_ranking(db, top, save):
     print("On the watch list, not ranked: " + ", ".join(watch))
 
 
+def show_news(db, ticker, days):
+    """One stock's news (direct mentions, then sector topics), or a count per stock."""
+    if not ticker:
+        counts = news.summary(db, days)
+        print(f"Stocks named in the news, last {days} days:")
+        for name, count in counts.items():
+            print(f"  {name:<6} {count}")
+        if not counts:
+            print("  none yet: run `news fetch`")
+        return
+    stock = next((s for s in load_watchlist() if s["ticker"] == ticker.upper()), None)
+    if not stock:
+        print(f"{ticker} isn't on the watchlist.")
+        return
+    direct, sector = news.for_stock(db, stock, days)
+    print(f"{stock['ticker']} ({stock['name']}), last {days} days")
+    print(f"\nNamed in {len(direct)} articles:")
+    for a in direct:
+        print(f"  {a['published'][:10]}  {a['title']}  [{a['source']}]\n               {a['url']}")
+    print(f"\n{stock['sector']} topics in {len(sector)} articles:")
+    for a in sector[:10]:
+        print(f"  {a['published'][:10]}  {a['title']}  ({', '.join(a['topics'])})")
+    if len(sector) > 10:
+        print(f"  ... and {len(sector) - 10} more")
+
+
 def main():
     parser = argparse.ArgumentParser(prog="nse_ranker", description="Rank my NSE watchlist.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -101,6 +127,13 @@ def main():
     recent.add_argument("tickers", nargs="*", help="default: every stock that isn't 'out'")
     price_actions.add_parser("status", help="show what's stored")
 
+    news_cmd = commands.add_parser("news", help="fetch or read Kenyan news")
+    news_actions = news_cmd.add_subparsers(dest="action", required=True)
+    news_actions.add_parser("fetch", help="read every feed in news.toml and store new articles")
+    show = news_actions.add_parser("show", help="news for one stock, or counts for all")
+    show.add_argument("ticker", nargs="?")
+    show.add_argument("--days", type=int, default=14)
+
     rank_cmd = commands.add_parser("rank", help="rank the watchlist from stored data")
     rank_cmd.add_argument("--top", type=int, default=20, help="how many to show (default 20)")
     rank_cmd.add_argument("--no-save", action="store_true", help="don't record this run")
@@ -109,6 +142,13 @@ def main():
 
     if args.command == "watchlist":
         show_watchlist()
+    elif args.command == "news":
+        db = store.connect()
+        if args.action == "fetch":
+            for source, (items, new) in news.fetch_all(db).items():
+                print(f"  {source}: {items} items, {new} new")
+        else:
+            show_news(db, args.ticker, args.days)
     elif args.command == "rank":
         show_ranking(store.connect(), args.top, save=not args.no_save)
     elif args.command == "prices":
