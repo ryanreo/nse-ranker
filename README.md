@@ -21,11 +21,13 @@ python -m nse_ranker prices eodhd       # fill 2026 from EODHD (needs EODHD_API_
 python -m nse_ranker prices recent      # last ~2 weeks from afx (1 stock a minute)
 python -m nse_ranker prices update      # today's closes, after 15:30 Nairobi time
 python -m nse_ranker prices status      # what's stored
-python -m nse_ranker news fetch         # read the news feeds in news.toml (run daily)
+python -m nse_ranker news fetch         # read the news sources in news.toml (run daily)
+python -m nse_ranker news fetch --backfill   # also older pages, last 30 days (first run)
 python -m nse_ranker news show KCB      # one stock's news; without a ticker, mentions per stock
 python -m nse_ranker news tag           # Haiku reads and tags new articles (rank also does this)
 python -m nse_ranker opinion fetch      # Reddit and X posts per stock, summarised by Haiku
 python -m nse_ranker rank               # ranked list with Haiku's review (--top N, --no-save, --no-ai)
+python -m nse_ranker export             # write the dashboard data files to reports/dashboard/
 python -m unittest                      # tests
 ```
 Prices and articles are stored in `data/nse.sqlite` (not committed). The feeds only hold the last day
