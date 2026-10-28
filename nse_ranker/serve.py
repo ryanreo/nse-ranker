@@ -15,7 +15,7 @@ D3 = "https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"
 DATA_NAMES = {"ranking", "prices", "news", "articles", "posts", "stats", "not_ranked", "method", "stocks"}
 
 
-def page():
+def page(title="NSE Watchlist Ranking (local)"):
     """The dashboard page wrapped in a full HTML document for the browser."""
     body = (DASHBOARD_DIR / "index.html").read_text(encoding="utf-8")
     return f"""<!doctype html>
@@ -23,7 +23,8 @@ def page():
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NSE Watchlist Ranking (local)</title>
+<meta name="description" content="A research ranking of Nairobi Securities Exchange stocks. Not financial advice.">
+<title>{title}</title>
 <link rel="stylesheet" href="/local.css">
 <script src="{D3}"></script>
 <script src="/local.js"></script>

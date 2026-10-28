@@ -1,5 +1,7 @@
 # nse-ranker
 
+Live: https://nse-watchlist.netlify.app (updated after each export and deploy)
+
 A personal research tool that ranks my Nairobi Securities Exchange (NSE) watchlist on demand.
 
 > Research tool only. It ranks stocks using public data and news; it is not financial advice.
@@ -29,6 +31,7 @@ python -m nse_ranker opinion fetch      # Reddit and X posts per stock, summaris
 python -m nse_ranker rank               # ranked list with Haiku's review (--top N, --no-save, --no-ai)
 python -m nse_ranker export --push      # write the dashboard tables and push them to Supabase
 python -m nse_ranker serve              # the dashboard on http://localhost:8000, from the last export
+python -m nse_ranker site --deploy     # rebuild and publish https://nse-watchlist.netlify.app
 python -m nse_ranker backtest           # test momentum and risk on 2008-2026 history
 python -m unittest                      # tests
 ```

@@ -7,3 +7,5 @@ reports/
 *.sqlite
 *.sqlite3
 .claude/
+site/
+.netlify/
