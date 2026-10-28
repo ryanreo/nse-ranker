@@ -20,6 +20,7 @@ DAYS = 30
 MAX_POSTS = 15          # X posts per stock search
 MIN_POSTS = 2           # fewer than this: no opinion score
 HYPE_DISCOUNT = 0.5     # hype or promotion counts half
+MAX_FAILURES_IN_A_ROW = 3   # one-off failures (timeouts) tolerated before a source is dropped for the run
 SUBREDDITS = ["nsekenya", "Kenya", "nairobi"]
 SUBREDDIT_POSTS = 100   # newest posts read from each subreddit
 
@@ -93,6 +94,11 @@ def query(stock):
 
 # ---- Sources. Each returns (posts, problem): problem is None if the source worked. ----
 
+def is_passing(problem):
+    """True for a one-off failure worth skipping past (a timeout), not a setup problem."""
+    return "TIMEOUT" in problem or "timed out" in problem
+
+
 def _x_date(text):
     """X's 'Wed Oct 28 08:00:10 +0000 2026' -> a datetime, or None."""
     try:
@@ -107,9 +113,12 @@ def from_x(stock, run=subprocess.run, now=None):
     opencli = shutil.which("opencli")   # full path: on Windows these CLIs are .cmd files
     if not opencli:
         return [], "X not set up: the `opencli` command isn't on PATH"
-    done = run([opencli, "twitter", "search", query(stock), "--product", "live", "--exclude", "replies",
-                "--limit", str(MAX_POSTS), "-f", "json"],
-               capture_output=True, text=True, encoding="utf-8", timeout=180)
+    try:
+        done = run([opencli, "twitter", "search", query(stock), "--product", "live", "--exclude", "replies",
+                    "--limit", str(MAX_POSTS), "-f", "json"],
+                   capture_output=True, text=True, encoding="utf-8", timeout=180)
+    except subprocess.TimeoutExpired:
+        return [], "X search timed out"
     if done.returncode != 0:
         output = done.stdout + done.stderr
         detail = "connect the OpenCLI extension in Chrome" if "BROWSER_CONNECT" in output else output.strip()[:120]
@@ -204,15 +213,21 @@ def collect(db, stocks, sources=SOURCES, bulk_sources=BULK_SOURCES, ask=haiku.as
             progress(f"  {name}: {len(posts)} recent posts read")
         for ticker, matched in match_posts(posts, stocks).items():
             bulk.setdefault(ticker, []).extend(matched)
+    failures = {}   # consecutive one-off failures per source
     for i, stock in enumerate(stocks, 1):
         posts = list(bulk.get(stock["ticker"], []))
         for name, fetch in sources.items():
             if name in broken:
                 continue
             found, problem = fetch(stock)
-            if problem:
-                broken.add(name)   # a source that isn't set up won't work for the next stock either
+            if problem and is_passing(problem) and failures.get(name, 0) + 1 < MAX_FAILURES_IN_A_ROW:
+                failures[name] = failures.get(name, 0) + 1   # a timeout: skip this stock, try the next
+                progress(f"  [{i}/{len(stocks)}] {stock['ticker']}: {name} {problem}, skipped")
+            elif problem:
+                broken.add(name)   # not set up, or failing every time: stop asking it this run
                 problems.append(problem)
+            else:
+                failures[name] = 0
             posts += found
         if len(posts) >= MIN_POSTS:
             reading = summarise(stock, posts, ask)

@@ -92,6 +92,29 @@ class TestOpinion(unittest.TestCase):
         self.assertEqual(problems, ["X not set up"])
         self.assertEqual(calls, ["SCOM"])   # not tried again for KCB
 
+    def test_a_timeout_skips_one_stock_but_not_the_source(self):
+        answers = iter([([], "X not available: code: TIMEOUT"), ([], None), ([], None)])
+        calls = []
+
+        def flaky(stock):
+            calls.append(stock["ticker"])
+            return next(answers)
+        db = store.connect(":memory:")
+        stocks = [dict(self.STOCK, ticker=t) for t in ("A", "B", "C")]
+        problems = opinion.collect(db, stocks, sources={"X": flaky}, bulk_sources={}, progress=lambda m: None)
+        self.assertEqual((calls, problems), (["A", "B", "C"], []))
+
+    def test_repeated_timeouts_drop_the_source(self):
+        calls = []
+
+        def down(stock):
+            calls.append(stock["ticker"])
+            return [], "X search timed out"
+        db = store.connect(":memory:")
+        stocks = [dict(self.STOCK, ticker=t) for t in "ABCDE"]
+        problems = opinion.collect(db, stocks, sources={"X": down}, bulk_sources={}, progress=lambda m: None)
+        self.assertEqual((len(calls), problems), (opinion.MAX_FAILURES_IN_A_ROW, ["X search timed out"]))
+
     def test_reddit_posts_are_read_once_and_matched_by_name(self):
         stocks = [self.STOCK, {"ticker": "KCB", "name": "KCB Group", "aliases": ["KCB"]}]
         bulk = {"Reddit": lambda: (self.POSTS + [{"platform": "Reddit", "author": "c", "text": "KCB app down", "url": "u3"}], None)}
