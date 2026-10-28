@@ -81,13 +81,10 @@ their posts; Haiku summarises them. Their views feed only the online-opinion fac
 lowest weight (see R1). They're a signal to check, not a reason to buy.
 
 ## Build sections (one commit each)
-Each section starts with a short briefing video and includes a small piece for me to write myself
-(coding-mentor).
-
 | # | Section | Built | Done when |
 |---|---|---|---|
 | 1 | Scaffold | README, folders, package | `python -m nse_ranker` runs |
-| 2 | Watchlist and profiles | `watchlist.yaml` with ticker, name, sector, type, drivers | all 72 checked and tagged |
+| 2 | Watchlist and profiles | `watchlist.toml` with ticker, name, sector, type, drivers | all 72 checked and tagged |
 | 3 | Price data | price fetcher, SQLite store | a year of daily prices for every listed counter |
 | 4 | Scoring criteria | factor functions, weights from R1 | each factor tested on sample numbers |
 | 5 | Rank command | `rank` prints a table with score and reasons | ranking runs from stored data in seconds |
@@ -119,5 +116,6 @@ The project is useful from section 5 on (prices and formulas only). Sections 6-8
   rather than per stock where possible, keeps it low.
 
 ## Setup still needed
-- Python packages: `requests`, `beautifulsoup4`, `pandas`, `pyyaml` (not installed yet).
+- Python packages: `requests`, `beautifulsoup4`, `pandas` (not installed yet). The watchlist uses TOML, which
+  Python 3.11 reads with the built-in `tomllib`.
 - Git: public GitHub repo; each section is committed and pushed as it's finished.

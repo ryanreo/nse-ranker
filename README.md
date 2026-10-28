@@ -15,7 +15,7 @@ Full plan: [docs/PLAN.md](docs/PLAN.md)
 
 ## Roadmap (built in sections, one commit each)
 - [x] 1. Project scaffold
-- [ ] 2. Watchlist and stock profiles (what drives each stock)
+- [x] 2. Watchlist and stock profiles (what drives each stock)
 - [ ] 3. Price data layer
 - [ ] 4. Scoring criteria (researched)
 - [ ] 5. Ranking command

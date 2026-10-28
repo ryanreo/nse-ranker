@@ -21,11 +21,5 @@ def load_watchlist(path=WATCHLIST_FILE):
 
 
 def rankable(stocks):
-    """Return a new list with only the stocks whose status is "rank".
-
-    Example: given ABSA ("rank"), GLD ("out") and HBE ("watch"), return a list
-    holding just ABSA. Keep them in the same order, and don't change the list
-    you were given.
-    """
-    # TODO: your code here (a for loop and an if)
-    return []
+    """Return a new list with only the stocks whose status is "rank", in order."""
+    return [stock for stock in stocks if stock["status"] == "rank"]
