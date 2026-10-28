@@ -37,7 +37,7 @@ Prices are stored in `data/nse.sqlite` (not committed).
 - [x] 1. Project scaffold
 - [x] 2. Watchlist and stock profiles (what drives each stock)
 - [x] 3. Price data layer
-- [ ] 4. Scoring criteria (researched)
+- [x] 4. Scoring criteria (researched)
 - [ ] 5. Ranking command
 - [ ] 6. Kenyan news scraper
 - [ ] 7. Haiku insight layer (Agent-Reach, X)
