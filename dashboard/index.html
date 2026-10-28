@@ -62,6 +62,25 @@
   .nse-news a { color: var(--color-fg); }
   .nse-news small { color: var(--color-fg-muted); }
 
+  .nse-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); }
+  .nse-tabs button { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+  .nse-tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .nse-tabs button:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  .nse-pane { display: grid; gap: var(--cds-gap-sm); }
+  .nse-metrics { margin: 0; display: grid; gap: var(--cds-gap-sm); grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)); }
+  .nse-metrics > div { background: var(--color-bg); border-radius: var(--cds-radius); padding: var(--cds-pad-sm); display: grid; gap: 2px; }
+  .nse-metrics dt { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .nse-metrics dd { margin: 0; font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); font-variant-numeric: tabular-nums; }
+  .nse-range { position: relative; height: 2.75rem; }
+  .nse-range .nse-track { position: absolute; left: 0; right: 0; top: 0.9rem; height: 0.4rem; border-radius: var(--cds-radius); background: var(--color-bg); }
+  .nse-range .nse-mark { position: absolute; top: 0.55rem; width: 2px; height: 1.1rem; background: var(--color-fg); }
+  .nse-range .nse-lo, .nse-range .nse-hi { position: absolute; top: 1.6rem; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .nse-range .nse-hi { right: 0; }
+  .nse-posts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cds-gap-sm); max-height: 30rem; overflow: auto; }
+  .nse-posts li { background: var(--color-bg); border-radius: var(--cds-radius); padding: var(--cds-pad-sm); display: grid; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); }
+  .nse-posts small { color: var(--color-fg-muted); }
+  .nse-posts p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+
   .nse-lower { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); align-items: start; }
   .nse-small { max-height: 24rem; }
   [data-dash-source-state=empty] { color: transparent; }
@@ -119,29 +138,89 @@
     <article class="nse-card nse-detail" id="stock" aria-live="polite">
       <h2 data-draw="d-title" data-source="ranking">—</h2>
       <p class="nse-sub" data-draw="d-meta" data-source="ranking">—</p>
-      <h3>Does it make sense to buy?</h3>
-      <p class="nse-explain" data-draw="d-explain" data-source="ranking">—</p>
-      <p class="nse-sub">From the formula: <span data-draw="d-reasons" data-source="ranking">—</span></p>
-      <div class="nse-two">
-        <div>
-          <h3>Factor scores</h3>
-          <p class="nse-sub">0 to 100 against the other ranked stocks; the weight is each factor's share of the score.</p>
-          <div class="nse-factors" data-draw="d-factors" data-source="ranking method"></div>
-        </div>
-        <div>
-          <h3>Price, last 12 months</h3>
-          <p class="nse-sub">Daily close in shillings.</p>
-          <div class="nse-chart" data-draw="d-price" data-source="prices"></div>
-        </div>
+      <div class="nse-tabs" role="tablist" aria-label="Stock details">
+        <button type="button" role="tab" id="tab-overview" aria-controls="pane-overview" aria-selected="true">Overview</button>
+        <button type="button" role="tab" id="tab-analysis" aria-controls="pane-analysis" aria-selected="false">Analysis</button>
+        <button type="button" role="tab" id="tab-news" aria-controls="pane-news" aria-selected="false">News</button>
+        <button type="button" role="tab" id="tab-people" aria-controls="pane-people" aria-selected="false">People talking</button>
       </div>
-      <h3>News behind the score</h3>
-      <p class="nse-sub">Articles Haiku read and tagged as good or bad for shareholders.</p>
-      <ul class="nse-news" data-draw="d-news" data-source="news"></ul>
-      <h3>Other articles naming it</h3>
-      <p class="nse-sub">Headlines from the last 30 days that mention the company but weren't scored (Business Daily is headline-only by its rules).</p>
-      <ul class="nse-news" data-draw="d-articles" data-source="articles news"></ul>
-      <h3>Online opinion</h3>
-      <p class="nse-sub" data-draw="d-opinion" data-source="ranking">—</p>
+
+      <section class="nse-pane" id="pane-overview" role="tabpanel" aria-labelledby="tab-overview">
+        <h3>Does it make sense to buy?</h3>
+        <p class="nse-explain" data-draw="d-explain" data-source="ranking">—</p>
+        <p class="nse-sub">From the formula: <span data-draw="d-reasons" data-source="ranking">—</span></p>
+        <div class="nse-two">
+          <div>
+            <h3>Factor scores</h3>
+            <p class="nse-sub">0 to 100 against the other ranked stocks; the weight is each factor's share of the score.</p>
+            <div class="nse-factors" data-draw="d-factors" data-source="ranking method"></div>
+          </div>
+          <div>
+            <h3>Price, last 12 months</h3>
+            <p class="nse-sub">Daily close in shillings.</p>
+            <div class="nse-chart" data-draw="d-price" data-source="prices"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="nse-pane" id="pane-analysis" role="tabpanel" aria-labelledby="tab-analysis" hidden>
+        <p class="nse-sub">Worked out from stored prices, the ranking, news and posts. No AI.</p>
+        <h3>Price performance</h3>
+        <dl class="nse-metrics">
+          <div><dt>1 month</dt><dd data-draw="a-val" data-metric="ret_1m" data-format="ret" data-source="stats">—</dd></div>
+          <div><dt>3 months</dt><dd data-draw="a-val" data-metric="ret_3m" data-format="ret" data-source="stats">—</dd></div>
+          <div><dt>6 months</dt><dd data-draw="a-val" data-metric="ret_6m" data-format="ret" data-source="stats">—</dd></div>
+          <div><dt>12 months</dt><dd data-draw="a-val" data-metric="ret_12m" data-format="ret" data-source="stats">—</dd></div>
+        </dl>
+        <h3>52-week range</h3>
+        <div class="nse-range" data-draw="a-range" data-source="stats ranking"></div>
+        <dl class="nse-metrics">
+          <div><dt>Below 52-week high</dt><dd data-draw="a-val" data-metric="from_high" data-format="ret" data-source="stats">—</dd></div>
+          <div><dt>50-day average</dt><dd data-draw="a-val" data-metric="ma50" data-format="money" data-source="stats">—</dd></div>
+          <div><dt>200-day average</dt><dd data-draw="a-val" data-metric="ma200" data-format="money" data-source="stats">—</dd></div>
+          <div><dt>Trend</dt><dd data-draw="a-trend" data-source="stats ranking">—</dd></div>
+        </dl>
+        <h3>Risk and trading</h3>
+        <dl class="nse-metrics">
+          <div><dt>Volatility, yearly</dt><dd data-draw="a-val" data-metric="volatility_yr" data-format="pct" data-source="stats">—</dd></div>
+          <div><dt>Worst drop, 12 months</dt><dd data-draw="a-val" data-metric="max_drawdown_12m" data-format="ret" data-source="stats">—</dd></div>
+          <div><dt>Traded a day, 60-day average</dt><dd data-draw="a-val" data-metric="traded_value_60d" data-format="kes" data-source="stats">—</dd></div>
+          <div><dt>Days with trades</dt><dd data-draw="a-val" data-metric="traded_days_share" data-format="pct" data-source="stats">—</dd></div>
+        </dl>
+        <h3>Against its sector</h3>
+        <dl class="nse-metrics">
+          <div><dt>Rank in sector</dt><dd data-draw="a-sector" data-source="stats ranking">—</dd></div>
+          <div><dt>P/E</dt><dd data-draw="a-val" data-metric="pe" data-format="num" data-source="ranking">—</dd></div>
+          <div><dt>Sector median P/E</dt><dd data-draw="a-val" data-metric="sector_median_pe" data-format="num" data-source="stats">—</dd></div>
+          <div><dt>Dividend yield (covered)</dt><dd data-draw="a-val" data-metric="div_yield" data-format="pct1" data-source="ranking">—</dd></div>
+          <div><dt>Sector median yield</dt><dd data-draw="a-val" data-metric="sector_median_yield" data-format="pct1" data-source="stats">—</dd></div>
+        </dl>
+        <h3>Attention, last 30 days</h3>
+        <dl class="nse-metrics">
+          <div><dt>Good news</dt><dd class="nse-ok" data-draw="a-val" data-metric="news_good" data-format="int" data-source="stats">—</dd></div>
+          <div><dt>Bad news</dt><dd class="nse-bad" data-draw="a-val" data-metric="news_bad" data-format="int" data-source="stats">—</dd></div>
+          <div><dt>Neutral news</dt><dd data-draw="a-val" data-metric="news_neutral" data-format="int" data-source="stats">—</dd></div>
+          <div><dt>Articles naming it</dt><dd data-draw="a-val" data-metric="articles_30d" data-format="int" data-source="stats">—</dd></div>
+          <div><dt>Reddit posts</dt><dd data-draw="a-val" data-metric="posts_reddit" data-format="int" data-source="stats">—</dd></div>
+          <div><dt>X posts</dt><dd data-draw="a-val" data-metric="posts_x" data-format="int" data-source="stats">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="nse-pane" id="pane-news" role="tabpanel" aria-labelledby="tab-news" hidden>
+        <h3>News behind the score</h3>
+        <p class="nse-sub">Articles Haiku read and tagged as good or bad for shareholders.</p>
+        <ul class="nse-news" data-draw="d-news" data-source="news"></ul>
+        <h3>Other articles naming it</h3>
+        <p class="nse-sub">Headlines from the last 30 days that mention the company but weren't scored (Business Daily is headline-only by its rules).</p>
+        <ul class="nse-news" data-draw="d-articles" data-source="articles news"></ul>
+      </section>
+
+      <section class="nse-pane" id="pane-people" role="tabpanel" aria-labelledby="tab-people" hidden>
+        <h3>What people are saying</h3>
+        <p class="nse-sub" data-draw="d-opinion" data-source="ranking">—</p>
+        <p class="nse-sub">Posts from the last 30 days that name the company. Usernames are hidden. Online opinion is the lowest-weight factor (3 of 100).</p>
+        <ul class="nse-posts" data-draw="d-posts" data-source="posts"></ul>
+      </section>
     </article>
   </section>
 
@@ -211,10 +290,36 @@
     current() { const rows = nse.rows(); return rows.find((r) => r.ticker === nse.picked) || rows[0]; },
     pick(ticker) {
       nse.picked = ticker;
-      ['rank-table', 'd-title', 'd-meta', 'd-explain', 'd-reasons', 'd-factors', 'd-price', 'd-news', 'd-articles', 'd-opinion'].forEach((n) => dash.draw(n));
+      ['rank-table', 'd-title', 'd-meta', 'd-explain', 'd-reasons', 'd-factors', 'd-price', 'd-news', 'd-articles',
+        'd-opinion', 'd-posts', 'a-val', 'a-range', 'a-trend', 'a-sector'].forEach((n) => dash.draw(n));
     },
     cell(tr, text, cls) { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); return td; },
+    stat() {
+      const r = nse.current();
+      const s = dash.data('stats');
+      return r && s.status === 'ok' ? s.data.find((x) => x.ticker === r.ticker) : null;
+    },
+    formats: {
+      ret: (v) => d3.format('+.1%')(v),
+      pct: (v) => d3.format('.0%')(v),
+      pct1: (v) => d3.format('.1%')(v),
+      num: (v) => d3.format('.1f')(v),
+      int: (v) => String(Math.round(v)),
+      money: (v) => d3.format(',.2f')(v),
+      kes: (v) => `KES ${Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`,
+    },
   };
+
+  // Tabs in the stock panel: show one pane, hide the others.
+  document.querySelectorAll('.nse-tabs [role="tab"]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nse-tabs [role="tab"]').forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        document.querySelectorAll(`#${t.getAttribute('aria-controls')}`).forEach((pane) => { pane.hidden = !on; });
+      });
+    });
+  });
 
   dash.calc('summary', {
     inputs: ['ranking'],
@@ -496,6 +601,75 @@
       li.append(link, meta);
       el.appendChild(li);
     });
+  });
+
+  dash.draw('d-posts', (el) => {
+    const r = nse.current();
+    const p = dash.data('posts');
+    el.replaceChildren();
+    if (!r || p.status !== 'ok') return;
+    const items = p.data.filter((x) => x.ticker === r.ticker)
+      .sort((a, b) => String(b.posted || '').localeCompare(String(a.posted || '')));
+    if (!items.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No posts naming this company on Reddit or X in the last 30 days.';
+      el.appendChild(li);
+      return;
+    }
+    items.forEach((x) => {
+      const li = document.createElement('li');
+      const who = document.createElement('small');
+      who.textContent = `user (${x.platform})${x.posted ? ` · ${nse.day(String(x.posted).slice(0, 10))}` : ''}`;
+      const text = document.createElement('p');
+      text.textContent = x.text;
+      li.append(who, text);
+      el.appendChild(li);
+    });
+  });
+
+  // Analysis tab: one drawing fills every metric box from its data-metric and data-format.
+  dash.draw('a-val', (el) => {
+    const r = nse.current();
+    const source = el.dataset.source === 'ranking' ? r : nse.stat();
+    const value = source ? source[el.dataset.metric] : null;
+    el.textContent = value == null ? '—' : nse.formats[el.dataset.format](+value);
+  });
+
+  dash.draw('a-range', (el) => {
+    const r = nse.current();
+    const s = nse.stat();
+    el.replaceChildren();
+    if (!r || !s || s.low_52w == null || s.high_52w == null) return;
+    const lo = +s.low_52w, hi = +s.high_52w;
+    const at = hi > lo ? Math.min(1, Math.max(0, (r.price - lo) / (hi - lo))) : 0.5;
+    const track = document.createElement('span');
+    track.className = 'nse-track';
+    const mark = document.createElement('span');
+    mark.className = 'nse-mark';
+    mark.style.left = `calc(${at * 100}% - 1px)`;
+    mark.title = `KES ${nse.money(r.price)}`;
+    const low = document.createElement('span');
+    low.className = 'nse-lo';
+    low.textContent = `low ${nse.money(lo)}`;
+    const high = document.createElement('span');
+    high.className = 'nse-hi';
+    high.textContent = `high ${nse.money(hi)} · now ${nse.money(r.price)}`;
+    el.append(track, mark, low, high);
+  });
+
+  dash.draw('a-trend', (el) => {
+    const r = nse.current();
+    const s = nse.stat();
+    if (!r || !s || s.ma50 == null || s.ma200 == null) { el.textContent = '—'; return; }
+    const up = +s.ma50 > +s.ma200;
+    el.textContent = up ? (r.price >= +s.ma50 ? 'Up, above both' : 'Up, dipping') : (r.price <= +s.ma50 ? 'Down, below both' : 'Down, recovering');
+    el.className = up ? 'nse-ok' : 'nse-bad';
+  });
+
+  dash.draw('a-sector', (el) => {
+    const r = nse.current();
+    const s = nse.stat();
+    el.textContent = r && s ? `${s.sector_rank} of ${s.sector_size}` : '—';
   });
 
   dash.draw('d-opinion', (el) => {
