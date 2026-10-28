@@ -30,7 +30,7 @@ PRICE_COLUMNS = ("ticker", "date", "close", "high", "low", "prev_close", "volume
 def connect(path=DB_FILE):
     """Open the database, creating the file and tables if needed."""
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(path)
+    db = sqlite3.connect(path, timeout=30)   # wait for another writer instead of failing
     db.executescript(SCHEMA)
     return db
 

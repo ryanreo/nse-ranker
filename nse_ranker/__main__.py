@@ -1,6 +1,7 @@
 """Command line: python -m nse_ranker <command>"""
 import argparse
 from collections import Counter
+from datetime import date
 
 from . import prices, store
 from .watchlist import load_watchlist, rankable
@@ -37,6 +38,10 @@ def main():
     price_actions = price_cmd.add_subparsers(dest="action", required=True)
     history = price_actions.add_parser("history", help="load 2007-2025 history from Mendeley")
     history.add_argument("--from", dest="first_year", type=int, default=2007)
+    gap = price_actions.add_parser("eodhd", help="fill missing days from EODHD (1 API call per stock)")
+    gap.add_argument("--from", dest="start", default="2026-01-01")
+    gap.add_argument("--to", dest="end", default=date.today().isoformat())
+    gap.add_argument("tickers", nargs="*", help="default: every stock that isn't 'out'")
     price_actions.add_parser("update", help="store today's closes from afx (after 15:30)")
     recent = price_actions.add_parser("recent", help="store the last ~2 weeks from afx (1 stock a minute)")
     recent.add_argument("tickers", nargs="*", help="default: every stock that isn't 'out'")
@@ -51,6 +56,10 @@ def main():
         if args.action == "history":
             print(f"Loading Mendeley history from {args.first_year}...")
             print(f"Stored {prices.load_history(db, args.first_year):,} rows.")
+        elif args.action == "eodhd":
+            tickers = args.tickers or [s["ticker"] for s in load_watchlist() if s["status"] != "out"]
+            print(f"Filling {args.start} to {args.end} from EODHD: {len(tickers)} API calls...")
+            print(f"Stored {prices.fill_from_eodhd(db, tickers, args.start, args.end):,} rows.")
         elif args.action == "update":
             count = prices.update_latest(db)
             print(f"Stored {count} closes." if count else "Market not closed yet (after 15:30 Nairobi time).")

@@ -2,7 +2,7 @@
 from datetime import date, timedelta
 
 from . import store, web
-from .sources import afx, mendeley
+from .sources import afx, eodhd, mendeley
 from .watchlist import load_watchlist
 
 
@@ -25,6 +25,21 @@ def load_history(db, first_year=2007):
 def update_latest(db):
     """Store today's closes from afx. Returns the number of rows (0 before the close)."""
     return store.save_prices(db, afx.latest())
+
+
+def fill_from_eodhd(db, tickers, start, end):
+    """Store EODHD daily prices for each ticker between two dates. One API call per ticker.
+
+    Rows already stored from another source are kept: EODHD only fills missing days.
+    """
+    key = eodhd.api_key()
+    total = 0
+    for i, ticker in enumerate(tickers, 1):
+        have = {d for d, _, _ in store.history(db, ticker, since=start)}
+        rows = [row for row in eodhd.daily(ticker, start, end, key) if row["date"] not in have]
+        total += store.save_prices(db, rows)
+        print(f"  [{i}/{len(tickers)}] {ticker}: {len(rows)} new days")
+    return total
 
 
 def load_recent(db, tickers):

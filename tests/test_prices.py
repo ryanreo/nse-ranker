@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime
 
 from nse_ranker import store
-from nse_ranker.sources import afx, mendeley
+from nse_ranker.sources import afx, eodhd, mendeley
 
 MENDELEY_CSV = (
     "﻿Date,Code,Name,12m Low,12m High,Day Low,Day High,Day Price,Previous,Change,Change%,Volume,Adjusted Price\n"
@@ -60,6 +60,37 @@ class TestAfx(unittest.TestCase):
         self.assertFalse(afx.market_closed_today(tuesday.replace(hour=11)))
         self.assertTrue(afx.market_closed_today(tuesday.replace(hour=16)))
         self.assertFalse(afx.market_closed_today(datetime(2026, 10, 31, 16, tzinfo=afx.NAIROBI)))
+
+
+class TestEodhd(unittest.TestCase):
+    def bars(self, closes):
+        return [{"date": f"2026-05-{i + 10}", "close": c, "high": c, "low": c, "volume": 100}
+                for i, c in enumerate(closes)]
+
+    def test_repairs_a_day_recorded_in_cents(self):
+        rows = eodhd.parse(self.bars([9.16, 916.0, 9.32]), "HFCB")
+        self.assertEqual([r["close"] for r in rows], [9.16, 9.16, 9.32])
+        self.assertEqual(rows[1]["high"], 9.16)
+
+    def test_repairs_a_10x_slip(self):
+        rows = eodhd.parse(self.bars([1.29, 12.7, 1.25]), "HAFR")
+        self.assertAlmostEqual(rows[1]["close"], 1.27)
+
+    def test_repairs_a_bad_first_day(self):
+        rows = eodhd.parse(self.bars([228.0, 2.35, 2.4]), "FTGH")
+        self.assertEqual(rows[0]["close"], 2.28)
+
+    def test_drops_a_jump_no_factor_explains(self):
+        rows = eodhd.parse(self.bars([10.0, 70.0, 10.2]), "XYZ")
+        self.assertEqual([r["close"] for r in rows], [10.0, 10.2])
+
+    def test_keeps_normal_moves_and_links_prev_close(self):
+        rows = eodhd.parse(self.bars([10.0, 11.0, 9.9]), "XYZ")
+        self.assertEqual([r["prev_close"] for r in rows], [None, 10.0, 11.0])
+
+    def test_api_key_error_is_clear(self):
+        with self.assertRaisesRegex(RuntimeError, "EODHD_API_KEY"):
+            eodhd.api_key("no-such-file.env")
 
 
 class TestStore(unittest.TestCase):
