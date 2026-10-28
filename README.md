@@ -11,6 +11,8 @@ A personal research tool that ranks my Nairobi Securities Exchange (NSE) watchli
 4. **Criteria**: a scoring model built from researched rules for what makes a stock worth buying.
 5. **Rank**: `python -m nse_ranker rank` prints a scored list each time I ask.
 
+Full plan: [docs/PLAN.md](docs/PLAN.md)
+
 ## Roadmap (built in sections, one commit each)
 - [x] 1. Project scaffold
 - [ ] 2. Watchlist and stock profiles (what drives each stock)
