@@ -51,15 +51,20 @@ def show_ranking(db, top, save):
         print(f"! Prices are more than {STALE_AFTER_DAYS} days old: run `prices update` after 15:30.")
     print()
     print(f"{'#':>3}  {'Ticker':<6} {'Score':>5}  {'Mom':>4} {'Val':>4} {'Div':>4} {'Qua':>4} {'Risk':>4}"
-          f"  {'Price':>9}  {'vs last':>7}")
+          f"  {'Price':>9}  {'vs last':>7}  Hold")
     for position, r in enumerate(ranked[:top], 1):
         f = r["factors"]
         move = "new" if r["ticker"] not in before else f"{before[r['ticker']] - position:+d}"
         print(f"{position:>3}  {r['ticker']:<6} {r['score']:5.1f}  {_cell(f['momentum'])} {_cell(f['value'])} "
-              f"{_cell(f['dividend'])} {_cell(f['quality'])} {_cell(f['risk'])}  {r['price']:>9,.2f}  {move:>7}")
+              f"{_cell(f['dividend'])} {_cell(f['quality'])} {_cell(f['risk'])}  {r['price']:>9,.2f}  {move:>7}"
+              f"  {r['hold'] or '-'}")
         print(f"{'':13}{r['name']}: " + ("; ".join(r["reasons"]) or "no standout factor"))
     if len(ranked) > top:
         print(f"... and {len(ranked) - top} more (use --top {len(ranked)} to see all).")
+    print()
+    print("Hold: a guide from what drives each score (momentum 3-6 months, earnings growth and calm")
+    print("prices 6-12 months, cheapness and dividends 12+ months). Re-rank monthly; if a stock drops")
+    print("out of the top half, the reason you bought it has probably faded.")
 
     left_out = [r for r in results if r["score"] is None]
     if left_out:

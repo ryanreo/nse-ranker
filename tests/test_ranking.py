@@ -28,6 +28,22 @@ class TestReasons(unittest.TestCase):
         self.assertEqual(ranking.describe("value", -0.1, good=False), "loss-making")
 
 
+class TestHoldTime(unittest.TestCase):
+    def test_momentum_driven_stock_is_short_term(self):
+        self.assertEqual(ranking.hold_time(result(momentum=100, value=20, dividend=20, risk=50)), "3-6 months")
+
+    def test_value_and_dividend_driven_stock_is_long_term(self):
+        # momentum 25 x 60 = 1500 vs value + dividend (20 x 80) x 2 = 3200
+        self.assertEqual(ranking.hold_time(result(momentum=60, value=80, dividend=80, risk=50)), "12+ months")
+
+    def test_quality_and_risk_combine(self):
+        # quality 15 x 90 + risk 10 x 90 = 2250 beats momentum 25 x 80 = 2000
+        self.assertEqual(ranking.hold_time(result(momentum=80, quality=90, risk=90)), "6-12 months")
+
+    def test_no_factors_no_hold_time(self):
+        self.assertIsNone(ranking.hold_time(result()))
+
+
 class TestRuns(unittest.TestCase):
     def test_runs_are_saved_and_compared(self):
         db = store.connect(":memory:")

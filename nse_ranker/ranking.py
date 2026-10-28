@@ -37,7 +37,9 @@ def describe(name, raw, good):
             return "loss-making"
         return f"P/E {1 / raw:.1f}, {'cheap' if good else 'expensive'} for its sector"
     if name == "dividend":
-        return f"dividend yield {raw:.1%}, covered by earnings" if raw else "no dividend covered by earnings"
+        if not raw:
+            return "no dividend covered by earnings"
+        return f"dividend yield {raw:.1%}, covered by earnings" if good else f"dividend yield only {raw:.1%}"
     if name == "quality":
         return f"EPS {raw:+.0%} at the latest results"
     if name == "risk":
@@ -54,6 +56,32 @@ def reasons(result):
     return [("+ " if good else "- ") + describe(name, result["raw"][name], good) for name, good in picks]
 
 
+# Each factor tends to pay off over a different time span (docs/RESEARCH.md, R1):
+# momentum on the NSE lasts about 3-6 months; cheapness and dividends take a year or more;
+# earnings growth and calm prices sit in between, roughly until the next results.
+HOLD_PERIODS = {
+    "momentum": "3-6 months",
+    "quality": "6-12 months",
+    "risk": "6-12 months",
+    "value": "12+ months",
+    "dividend": "12+ months",
+}
+
+
+def hold_time(result):
+    """Suggested holding period: the span of the factors that add the most to this stock's score.
+
+    Each factor's share is its weight times its score. Factors are grouped by span, and the
+    biggest group wins. News and online opinion don't set a hold time.
+    """
+    shares = {}
+    for name, score in result["factors"].items():
+        if score is not None and name in HOLD_PERIODS:
+            period = HOLD_PERIODS[name]
+            shares[period] = shares.get(period, 0) + scoring.WEIGHTS[name] * score
+    return max(shares, key=shares.get) if shares else None
+
+
 def rank(db, today=None):
     """Score every "rank" stock. Returns (results, inputs by ticker)."""
     inputs = build_inputs(db, today)
@@ -65,6 +93,7 @@ def rank(db, today=None):
         result["price"] = stock["rows"][-1][1]
         result["price_date"] = stock["rows"][-1][0]
         result["reasons"] = reasons(result) if result["score"] is not None else []
+        result["hold"] = hold_time(result) if result["score"] is not None else None
     return results
 
 

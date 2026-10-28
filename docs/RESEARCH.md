@@ -56,6 +56,12 @@ Every factor score is 0–100, ranked against the other stocks. The final score 
   on every fetch, and quality starts counting once a company reports new results.
 - A factor with no data for a stock is left out, and the other weights are scaled up to fill in.
   It's never counted as zero.
+
+**Hold time (section 5, `ranking.hold_time`):** each stock's suggested holding period follows the factors that
+add most to its score. Momentum on the NSE lasted about 3–6 months in the studies above, so momentum-led
+stocks get **3–6 months**. Value and dividends work slowly, so they get **12+ months**, which covers at least
+one dividend. Earnings growth and low volatility sit in between at **6–12 months**, about one results cycle.
+This is a guideline from the evidence, not a forecast. The backtest (section 8) should check it.
 The backtest (section 8) will check whether these weights beat simpler ones, such as momentum alone.
 
 ---
