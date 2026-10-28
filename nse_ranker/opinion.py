@@ -94,9 +94,12 @@ def query(stock):
 
 # ---- Sources. Each returns (posts, problem): problem is None if the source worked. ----
 
+SETUP_PROBLEMS = ("not set up", "connect the OpenCLI extension")
+
+
 def is_passing(problem):
-    """True for a one-off failure worth skipping past (a timeout), not a setup problem."""
-    return "TIMEOUT" in problem or "timed out" in problem
+    """True for a one-off failure worth skipping past (a timeout, an odd reply), not a setup problem."""
+    return not any(words in problem for words in SETUP_PROBLEMS)
 
 
 def _x_date(text):
@@ -119,14 +122,13 @@ def from_x(stock, run=subprocess.run, now=None):
                    capture_output=True, text=True, encoding="utf-8", timeout=180)
     except subprocess.TimeoutExpired:
         return [], "X search timed out"
-    if done.returncode != 0:
-        output = done.stdout + done.stderr
-        detail = "connect the OpenCLI extension in Chrome" if "BROWSER_CONNECT" in output else output.strip()[:120]
-        return [], f"X not available: {detail}"
-    try:
+    if "BROWSER_CONNECT" in done.stdout + done.stderr:
+        return [], "X not available: connect the OpenCLI extension in Chrome"
+    try:   # OpenCLI sometimes exits with an error code yet still prints usable results
         items = _items(done.stdout)
-    except (ValueError, RuntimeError) as error:
-        return [], f"X search failed: {str(error)[:120]}"
+    except (ValueError, RuntimeError):
+        first_line = (done.stderr or done.stdout).strip().splitlines()[:1]
+        return [], f"X search failed (exit {done.returncode}): {first_line[0][:100] if first_line else 'no output'}"
     cutoff = (now or datetime.now(timezone.utc)) - timedelta(days=DAYS)
     posts = []
     for item in items:
@@ -214,7 +216,10 @@ def collect(db, stocks, sources=SOURCES, bulk_sources=BULK_SOURCES, ask=haiku.as
         for ticker, matched in match_posts(posts, stocks).items():
             bulk.setdefault(ticker, []).extend(matched)
     failures = {}   # consecutive one-off failures per source
+    done_today = {t for (t,) in db.execute("SELECT ticker FROM opinions WHERE date = ?", (today,))}
     for i, stock in enumerate(stocks, 1):
+        if stock["ticker"] in done_today:   # a rerun picks up where the last one stopped
+            continue
         posts = list(bulk.get(stock["ticker"], []))
         for name, fetch in sources.items():
             if name in broken:

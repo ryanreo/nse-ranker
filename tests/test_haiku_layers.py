@@ -104,6 +104,20 @@ class TestOpinion(unittest.TestCase):
         problems = opinion.collect(db, stocks, sources={"X": flaky}, bulk_sources={}, progress=lambda m: None)
         self.assertEqual((calls, problems), (["A", "B", "C"], []))
 
+    def test_odd_replies_skip_one_stock_but_setup_problems_stop_the_source(self):
+        self.assertTrue(opinion.is_passing("X search failed (exit 1): - id: '2115'"))
+        self.assertFalse(opinion.is_passing("X not available: connect the OpenCLI extension in Chrome"))
+        self.assertFalse(opinion.is_passing("X not set up: the `opencli` command isn't on PATH"))
+
+    def test_results_are_kept_even_with_an_error_exit_code(self):
+        from types import SimpleNamespace
+        listing = json.dumps([{"id": "1", "author": "a", "text": "Equity shares up", "url": "u",
+                               "created_at": "Wed Oct 28 08:00:10 +0000 2026"}])
+        run = lambda *a, **k: SimpleNamespace(returncode=1, stdout=listing, stderr="Update available")
+        from datetime import datetime, timezone
+        posts, problem = opinion.from_x(self.STOCK, run=run, now=datetime(2026, 10, 28, tzinfo=timezone.utc))
+        self.assertEqual((len(posts), problem), (1, None))
+
     def test_repeated_timeouts_drop_the_source(self):
         calls = []
 
