@@ -2,23 +2,28 @@
 
 - X: Agent-Reach's `twitter` CLI. Needs TWITTER_AUTH_TOKEN and TWITTER_CT0 in .env, exported by you
   from your own logged-in x.com session. They're passed to the CLI and never printed.
-- Reddit: OpenCLI (`opencli reddit search`), which reads through your logged-in Chrome. Needs the
-  OpenCLI extension connected.
+- Reddit: OpenCLI, which reads through your logged-in Chrome (needs the OpenCLI extension connected).
+  Rather than one search per stock, it reads the newest posts from a few Kenyan subreddits once per
+  run and matches them to stocks by name, like the news. Fewer requests, gentler on the account.
 If a source isn't set up, it's skipped and the run says so.
 """
 import json
 import os
 import shutil
 import subprocess
+import time
 from datetime import date, timedelta
 
 from . import haiku
+from .news import Matcher
 from .sources.eodhd import ENV_FILE
 
 DAYS = 30
-MAX_POSTS = 15          # per source per stock
+MAX_POSTS = 15          # X posts per stock search
 MIN_POSTS = 2           # fewer than this: no opinion score
 HYPE_DISCOUNT = 0.5     # hype or promotion counts half
+SUBREDDITS = ["nsekenya", "Kenya", "nairobi"]
+SUBREDDIT_POSTS = 100   # newest posts read from each subreddit
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS opinions (
@@ -35,7 +40,10 @@ CREATE TABLE IF NOT EXISTS opinions (
 
 INSTRUCTIONS = """You summarise what people on Reddit and X say about one stock on the Nairobi Securities Exchange.
 The input has the stock and a list of posts. Judge only the posts' content.
-sentiment: -1 (clearly negative about owning the stock) to 1 (clearly positive); 0 if mixed or off-topic.
+investment_posts: how many posts discuss the company as an investment (its shares, price, dividends,
+results, buying or selling). Complaints about its products or service don't count.
+sentiment: -1 (clearly negative about owning the stock) to 1 (clearly positive), judged ONLY from the
+investment posts; 0 if there are none or they're mixed.
 hype: true if the positive posts read like hype, promotion, paid signals, WhatsApp/Telegram group adverts
 or "guaranteed returns". summary: two sentences on what people are saying and why.
 quotes: up to 3 short phrases copied exactly from the posts, with the post number.
@@ -44,6 +52,7 @@ Ignore posts that aren't about this company. This is research, not investment ad
 OPINION_SCHEMA = {
     "type": "object",
     "properties": {
+        "investment_posts": {"type": "integer", "minimum": 0},
         "sentiment": {"type": "number", "minimum": -1, "maximum": 1},
         "hype": {"type": "boolean"},
         "summary": {"type": "string"},
@@ -52,7 +61,7 @@ OPINION_SCHEMA = {
             "properties": {"post": {"type": "integer"}, "quote": {"type": "string"}},
             "required": ["post", "quote"]}},
     },
-    "required": ["sentiment", "hype", "summary", "quotes"],
+    "required": ["investment_posts", "sentiment", "hype", "summary", "quotes"],
 }
 
 
@@ -100,10 +109,11 @@ def from_x(stock, run=subprocess.run):
     token, ct0 = env.get("TWITTER_AUTH_TOKEN"), env.get("TWITTER_CT0")
     if not (token and ct0):
         return [], "X not set up: add TWITTER_AUTH_TOKEN and TWITTER_CT0 to .env"
-    if not shutil.which("twitter"):
+    twitter = shutil.which("twitter")   # full path: on Windows these CLIs are .exe/.cmd files
+    if not twitter:
         return [], "X not set up: the `twitter` command (Agent-Reach) isn't on PATH"
     since = (date.today() - timedelta(days=DAYS)).isoformat()
-    done = run(["twitter", "search", query(stock), "--type", "latest", "--since", since,
+    done = run([twitter, "search", query(stock), "--type", "latest", "--since", since,
                 "-n", str(MAX_POSTS), "--json"],
                capture_output=True, text=True, encoding="utf-8", timeout=120,
                env=dict(os.environ, TWITTER_AUTH_TOKEN=token, TWITTER_CT0=ct0))
@@ -122,31 +132,48 @@ def from_x(stock, run=subprocess.run):
     return posts, None
 
 
-def from_reddit(stock, run=subprocess.run):
-    if not shutil.which("opencli"):
+def reddit_posts(run=subprocess.run, now=None):
+    """The last DAYS days of posts from SUBREDDITS, read once per run. Returns (posts, problem)."""
+    opencli = shutil.which("opencli")
+    if not opencli:
         return [], "Reddit not set up: the `opencli` command isn't on PATH"
-    name = (stock.get("aliases") or [stock["name"]])[0]
-    done = run(["opencli", "reddit", "search", f'"{name}"', "--time", "month", "--sort", "new",
-                "--limit", str(MAX_POSTS), "-f", "json"],
-               capture_output=True, text=True, encoding="utf-8", timeout=120)
-    if done.returncode != 0:
-        detail = "connect the OpenCLI extension in Chrome" if "BROWSER_CONNECT" in (done.stdout + done.stderr) \
-            else (done.stderr or done.stdout)[:120]
-        return [], f"Reddit not available: {detail}"
-    try:
-        items = _items(done.stdout)
-    except (ValueError, RuntimeError) as error:
-        return [], f"Reddit search failed: {str(error)[:120]}"
+    cutoff = (now or time.time()) - DAYS * 86400
     posts = []
-    for item in items:
-        text = " ".join(filter(None, [_first(item, "title"), _first(item, "selftext", "body", "text", "content")]))
-        if text:
-            posts.append({"platform": "Reddit", "author": _first(item, "author", "subreddit"),
-                          "text": text, "url": _first(item, "url", "permalink", "link")})
+    for subreddit in SUBREDDITS:
+        done = run([opencli, "reddit", "subreddit", subreddit, "--sort", "new",
+                    "--limit", str(SUBREDDIT_POSTS), "-f", "json"],
+                   capture_output=True, text=True, encoding="utf-8", timeout=180)
+        if done.returncode != 0:
+            output = done.stdout + done.stderr
+            detail = "connect the OpenCLI extension in Chrome" if "BROWSER_CONNECT" in output else output.strip()[:120]
+            return [], f"Reddit not available: {detail}"
+        try:
+            items = _items(done.stdout)
+        except (ValueError, RuntimeError) as error:
+            return [], f"Reddit read failed: {str(error)[:120]}"
+        for item in items:
+            created = float(item.get("created_utc") or 0)
+            text = " ".join(filter(None, [_first(item, "title"), _first(item, "selftext", "body", "text")]))
+            if text and created >= cutoff:
+                posts.append({"platform": "Reddit", "author": _first(item, "author"), "text": text,
+                              "url": _first(item, "url", "permalink")})
     return posts, None
 
 
-SOURCES = {"X": from_x, "Reddit": from_reddit}
+def match_posts(posts, stocks):
+    """{ticker: [posts naming it]}, using the same name lists as the news."""
+    matcher = Matcher(stocks, {})
+    matched = {}
+    for post in posts:
+        tickers, _ = matcher.match({"title": post["text"], "summary": "", "text": None})
+        for ticker in tickers:
+            matched.setdefault(ticker, []).append(post)
+    return matched
+
+
+# Per-stock sources take a stock; bulk sources are read once and matched by name.
+SOURCES = {"X": from_x}
+BULK_SOURCES = {"Reddit": reddit_posts}
 
 
 # ---- Summarising and scoring ----
@@ -156,6 +183,8 @@ def summarise(stock, posts, ask=haiku.ask):
     data = {"stock": {"ticker": stock["ticker"], "name": stock["name"]},
             "posts": [{"post": i, "platform": p["platform"], "text": p["text"][:1000]} for i, p in enumerate(posts)]}
     answer = ask(INSTRUCTIONS, data, OPINION_SCHEMA)
+    if answer.get("investment_posts", 0) < MIN_POSTS:   # chatter about the service, not the shares
+        return None
     quotes = [{"quote": q["quote"], "url": posts[q["post"]]["url"]} for q in answer["quotes"]
               if 0 <= q["post"] < len(posts) and q["quote"].strip()
               and q["quote"].strip().lower() in posts[q["post"]]["text"].lower()]
@@ -165,13 +194,22 @@ def summarise(stock, posts, ask=haiku.ask):
             "summary": answer["summary"], "quotes": quotes}
 
 
-def collect(db, stocks, sources=SOURCES, ask=haiku.ask, progress=print):
+def collect(db, stocks, sources=SOURCES, bulk_sources=BULK_SOURCES, ask=haiku.ask, progress=print):
     """Fetch posts and store Haiku's summary for each stock. Returns the problems met, once each."""
     db.executescript(SCHEMA)
     today = date.today().isoformat()
     problems, broken = [], set()
+    bulk = {}
+    for name, fetch in bulk_sources.items():
+        posts, problem = fetch()
+        if problem:
+            problems.append(problem)
+        else:
+            progress(f"  {name}: {len(posts)} recent posts read")
+        for ticker, matched in match_posts(posts, stocks).items():
+            bulk.setdefault(ticker, []).extend(matched)
     for i, stock in enumerate(stocks, 1):
-        posts = []
+        posts = list(bulk.get(stock["ticker"], []))
         for name, fetch in sources.items():
             if name in broken:
                 continue
@@ -187,9 +225,8 @@ def collect(db, stocks, sources=SOURCES, ask=haiku.ask, progress=print):
                            (stock["ticker"], today, len(posts), reading["sentiment"], int(reading["hype"]),
                             reading["summary"], json.dumps(reading["quotes"])))
                 db.commit()
-        progress(f"  [{i}/{len(stocks)}] {stock['ticker']}: {len(posts)} posts")
-        if len(broken) == len(sources):
-            break   # nothing left to ask
+        if posts:
+            progress(f"  [{i}/{len(stocks)}] {stock['ticker']}: {len(posts)} posts")
     return problems
 
 

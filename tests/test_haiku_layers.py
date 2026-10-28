@@ -1,4 +1,5 @@
 """Tests for the Haiku layers, with a fake Haiku. Run with: python -m unittest"""
+import json
 import unittest
 from datetime import date
 
@@ -61,13 +62,18 @@ class TestOpinion(unittest.TestCase):
              {"platform": "X", "author": "b", "text": "Bought more Safaricom shares today", "url": "u2"}]
 
     def test_quotes_are_checked_against_the_posts(self):
-        fake = lambda *_: {"sentiment": 0.6, "hype": False, "summary": "Positive.",
+        fake = lambda *_: {"investment_posts": 2, "sentiment": 0.6, "hype": False, "summary": "Positive.",
                            "quotes": [{"post": 0, "quote": "dividend looks safe"}, {"post": 1, "quote": "to the moon"}]}
         reading = opinion.summarise(self.STOCK, self.POSTS, ask=fake)
         self.assertEqual(reading["quotes"], [{"quote": "dividend looks safe", "url": "u1"}])
 
     def test_no_real_quotes_means_no_reading(self):
-        fake = lambda *_: {"sentiment": 1, "hype": False, "summary": "x", "quotes": [{"post": 0, "quote": "made up"}]}
+        fake = lambda *_: {"investment_posts": 2, "sentiment": 1, "hype": False, "summary": "x", "quotes": [{"post": 0, "quote": "made up"}]}
+        self.assertIsNone(opinion.summarise(self.STOCK, self.POSTS, ask=fake))
+
+    def test_service_complaints_are_not_investment_opinion(self):
+        fake = lambda *_: {"investment_posts": 0, "sentiment": -0.5, "hype": False, "summary": "Complaints.",
+                           "quotes": [{"post": 0, "quote": "dividend looks safe"}]}
         self.assertIsNone(opinion.summarise(self.STOCK, self.POSTS, ask=fake))
 
     def test_hype_counts_half(self):
@@ -82,9 +88,38 @@ class TestOpinion(unittest.TestCase):
             return [], "X not set up"
         db = store.connect(":memory:")
         stocks = [self.STOCK, dict(self.STOCK, ticker="KCB")]
-        problems = opinion.collect(db, stocks, sources={"X": broken}, progress=lambda m: None)
+        problems = opinion.collect(db, stocks, sources={"X": broken}, bulk_sources={}, progress=lambda m: None)
         self.assertEqual(problems, ["X not set up"])
         self.assertEqual(calls, ["SCOM"])   # not tried again for KCB
+
+    def test_reddit_posts_are_read_once_and_matched_by_name(self):
+        stocks = [self.STOCK, {"ticker": "KCB", "name": "KCB Group", "aliases": ["KCB"]}]
+        bulk = {"Reddit": lambda: (self.POSTS + [{"platform": "Reddit", "author": "c", "text": "KCB app down", "url": "u3"}], None)}
+        seen = []
+
+        def fake(_, data, __):
+            seen.append((data["stock"]["ticker"], len(data["posts"])))
+            return {"investment_posts": 2, "sentiment": 0.2, "hype": False, "summary": "s", "quotes": [{"post": 0, "quote": data["posts"][0]["text"][:10]}]}
+        db = store.connect(":memory:")
+        opinion.collect(db, stocks, sources={}, bulk_sources=bulk, ask=fake, progress=lambda m: None)
+        self.assertEqual(seen, [("SCOM", 2)])   # KCB has only 1 post: below MIN_POSTS, no Haiku call
+        self.assertEqual(list(opinion.latest(db)), ["SCOM"])
+
+    def test_reddit_reader_keeps_recent_posts_only(self):
+        from types import SimpleNamespace
+        listing = json.dumps([
+            {"title": "Safaricom dividend", "selftext": "Paid today", "author": "a", "url": "u1", "created_utc": "1793100000"},
+            {"title": "Old post", "selftext": "", "author": "b", "url": "u2", "created_utc": "1700000000"},
+        ])
+        run = lambda *a, **k: SimpleNamespace(returncode=0, stdout=listing, stderr="")
+        posts, problem = opinion.reddit_posts(run=run, now=1793200000)   # 28 Oct 2026
+        self.assertIsNone(problem)
+        self.assertEqual({p["text"] for p in posts}, {"Safaricom dividend Paid today"})
+
+    def test_reddit_connection_problem_is_explained(self):
+        from types import SimpleNamespace
+        run = lambda *a, **k: SimpleNamespace(returncode=1, stdout="", stderr="code: BROWSER_CONNECT")
+        self.assertEqual(opinion.reddit_posts(run=run)[1], "Reddit not available: connect the OpenCLI extension in Chrome")
 
 
 def brief(news_ids=(), opinion_id=None):

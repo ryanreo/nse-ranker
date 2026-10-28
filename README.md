@@ -36,7 +36,7 @@ Haiku runs through the `claude` CLI (`claude -p --model haiku`), with no tools, 
 1. **News tags:** Haiku reads matched articles and tags each one: stock or sector, good or bad, how strong,
    and an exact quote. Tags whose quote isn't in the article are dropped. Each article is read once.
    Business Daily and Nation text is never sent (their sites say reference use only).
-2. **Online opinion:** posts from Reddit (OpenCLI, through your logged-in Chrome) and X (Agent-Reach's
+2. **Online opinion:** the newest posts in r/nsekenya, r/Kenya and r/nairobi (OpenCLI, through your logged-in Chrome) and X (Agent-Reach's
    `twitter`, with `TWITTER_AUTH_TOKEN` and `TWITTER_CT0` in `.env`). Haiku summarises them and flags hype.
    It's the lowest-weight factor (3 points), and hype counts half.
 3. **Review ("does it make sense to buy?"):** Haiku explains every stock's score and rates the case as
