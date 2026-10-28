@@ -43,12 +43,19 @@ def fill_from_eodhd(db, tickers, start, end):
 
 
 def load_recent(db, tickers):
-    """Store the last ~2 weeks for each ticker from afx. One request a minute."""
+    """Store the last ~2 weeks of prices and the current EPS/dividend for each ticker from afx.
+
+    One request a minute, so this takes about a minute per ticker.
+    """
     total = 0
+    today = date.today().isoformat()
     for i, ticker in enumerate(tickers, 1):
-        count = store.save_prices(db, afx.recent(ticker))
+        rows, facts = afx.stock_page(ticker)
+        count = store.save_prices(db, rows)
+        if facts:
+            store.save_fundamentals(db, ticker, today, facts, "afx")
         total += count
-        print(f"  [{i}/{len(tickers)}] {ticker}: {count} days")
+        print(f"  [{i}/{len(tickers)}] {ticker}: {count} days, EPS {facts.get('eps')}, DPS {facts.get('dps')}")
     return total
 
 

@@ -2,7 +2,7 @@
 
 Its robots.txt asks for 60 seconds between requests, so every request here waits that long.
 - latest(): today's closing prices for every counter, from the main page (1 request).
-- recent(ticker): the last ~2 weeks of closes for one counter, from its own page.
+- stock_page(ticker): the last ~2 weeks of closes plus EPS, dividend and shares, from its own page.
 """
 import re
 from datetime import datetime, timedelta, timezone
@@ -21,6 +21,10 @@ _MAIN_ROW = re.compile(
 )
 # Stock page rows: <tr><td>2026-10-21<td>6,274,461<td>34.15<td class=lo>-1.05<td class=lo>-2.98%
 _HISTORY_ROW = re.compile(r'<tr><td>(\d{4}-\d\d-\d\d)<td>([\d,]*)<td>([\d,.]+)<td(?: class=\w+)?>([+-]?[\d,.]*)')
+# Stock page "Growth & Valuation" table: <tr><td>Earnings Per Share<td class=hi>2.3863
+_FACT_ROW = re.compile(r'<tr><td>([A-Za-z/ ]+)<td(?: class=\w+)?>(-?[\d,.]+)([KMBT%]?)')
+_FACTS = {"Earnings Per Share": "eps", "Dividend Per Share": "dps", "Shares Outstanding": "shares"}
+_SCALE = {"": 1, "%": 1, "K": 1e3, "M": 1e6, "B": 1e9, "T": 1e12}
 
 
 def _num(text):
@@ -54,6 +58,15 @@ def parse_history(html, ticker):
         }
 
 
+def parse_facts(html):
+    """EPS, dividend per share and shares outstanding. Missing items are left out."""
+    facts = {}
+    for label, number, suffix in _FACT_ROW.findall(html):
+        if label.strip() in _FACTS:
+            facts[_FACTS[label.strip()]] = float(number.replace(",", "")) * _SCALE[suffix]
+    return facts
+
+
 def latest(now=None):
     """Today's closing prices for every counter. Returns [] before the market has closed."""
     now = now or datetime.now(NAIROBI)
@@ -63,7 +76,10 @@ def latest(now=None):
     return list(parse_main(html, now.strftime("%Y-%m-%d")))
 
 
-def recent(ticker):
-    """The last ~2 weeks of daily closes for one counter (one request, 60 s apart)."""
+def stock_page(ticker):
+    """One counter's page (one request, 60 s apart): (last ~2 weeks of closes, fundamentals)."""
     html = web.get(f"{BASE}{ticker.lower()}.html", delay=CRAWL_DELAY)
-    return list(parse_history(html.decode("utf-8"), ticker)) if html else []
+    if not html:
+        return [], {}
+    html = html.decode("utf-8", errors="replace")
+    return list(parse_history(html, ticker)), parse_facts(html)

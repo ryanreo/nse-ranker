@@ -17,10 +17,16 @@ CREATE TABLE IF NOT EXISTS prices (
     source     TEXT NOT NULL,
     PRIMARY KEY (ticker, date)
 );
--- Which daily NSE price lists we've already read, so we never fetch one twice.
-CREATE TABLE IF NOT EXISTS fetched_days (
-    date   TEXT PRIMARY KEY,
-    status TEXT NOT NULL      -- "ok" or "missing" (holiday / no list published)
+-- EPS and dividends as seen on each fetch. Keeping every snapshot lets us see EPS change
+-- when new results come out (the quality factor).
+CREATE TABLE IF NOT EXISTS fundamentals (
+    ticker  TEXT NOT NULL,
+    date    TEXT NOT NULL,    -- when we fetched it
+    eps     REAL,
+    dps     REAL,
+    shares  REAL,
+    source  TEXT NOT NULL,
+    PRIMARY KEY (ticker, date)
 );
 """
 
@@ -47,13 +53,28 @@ def save_prices(db, rows):
     return len(rows)
 
 
-def mark_fetched(db, date, status):
-    db.execute("INSERT OR REPLACE INTO fetched_days (date, status) VALUES (?, ?)", (date, status))
+def save_fundamentals(db, ticker, date, facts, source):
+    """Store one snapshot of EPS, dividend per share and shares outstanding."""
+    db.execute(
+        "INSERT OR REPLACE INTO fundamentals (ticker, date, eps, dps, shares, source) VALUES (?, ?, ?, ?, ?, ?)",
+        (ticker, date, facts.get("eps"), facts.get("dps"), facts.get("shares"), source),
+    )
     db.commit()
 
 
-def fetched_dates(db):
-    return {row[0] for row in db.execute("SELECT date FROM fetched_days")}
+def eps_history(db, ticker):
+    """Distinct EPS values seen for a ticker, oldest first: [(date first seen, eps, dps), ...]."""
+    rows = db.execute(
+        "SELECT date, eps, dps FROM fundamentals WHERE ticker = ? AND eps IS NOT NULL ORDER BY date",
+        (ticker,),
+    ).fetchall()
+    changes = []
+    for date, eps, dps in rows:
+        if not changes or eps != changes[-1][1]:
+            changes.append((date, eps, dps))
+        else:
+            changes[-1] = (changes[-1][0], eps, dps)   # same results; keep the latest dividend
+    return changes
 
 
 def history(db, ticker, since=None):
