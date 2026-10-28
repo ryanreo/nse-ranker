@@ -25,8 +25,8 @@ FACTOR_INFO = {
     "dividend": ("Dividend", "Dividend yield, counting only the part earnings cover"),
     "quality": ("Quality", "EPS growth between two results"),
     "risk": ("Risk", "How much the price moves day to day (calmer scores higher)"),
-    "news": ("News", "Recent Kenyan news tagged by Haiku, fading over two weeks"),
-    "opinion": ("Online opinion", "Investment talk on Reddit and X, summarised by Haiku; hype counts half"),
+    "news": ("News", "Recent Kenyan news, rated by AI, fading over two weeks"),
+    "opinion": ("Online opinion", "Investment talk on Reddit and X, summarised by AI; hype counts half"),
 }
 
 

@@ -98,7 +98,7 @@
   <header class="nse-head">
     <h1>NSE Watchlist</h1>
     <p class="nse-lead">Ranked on <b data-draw="asof" data-source="summary">—</b> prices: <b data-draw="count" data-source="summary" data-field="stocks" data-row="0">—</b> Nairobi Securities Exchange stocks scored on momentum, value, dividends, earnings, risk, news and online opinion. <b data-draw="top" data-source="summary" data-field="top" data-row="0">—</b> leads the list.</p>
-    <p class="nse-note">A research tool, not financial advice. Scores come from formulas over public prices, company figures and Kenyan news; Claude Haiku explains each one and may move a stock up to five places when the news gives a reason. Online opinion counts least. <button type="button" class="nse-guide-toggle" aria-expanded="false" aria-controls="guide">New here? How to read this page</button></p>
+    <p class="nse-note">A research tool, not financial advice. Scores come from formulas over public prices, company figures and Kenyan news; AI explains each one and may move a stock up to five places when the news gives a reason. Online opinion counts least. <button type="button" class="nse-guide-toggle" aria-expanded="false" aria-controls="guide">New here? How to read this page</button></p>
   </header>
 
   <section class="nse-guide" id="guide" aria-label="How to read this page" hidden>
@@ -108,15 +108,15 @@
     </div>
     <div>
       <h3>Strong, mixed, weak</h3>
-      <p>Haiku's answer to "does it make sense to buy?". Strong means a high score backed by several factors and no clearly bad recent news; weak means a low score, one factor doing all the work, or bad news. Most stocks are mixed.</p>
+      <p>The answer to "does it make sense to buy?". Strong means a high score backed by several factors and no clearly bad recent news; weak means a low score, one factor doing all the work, or bad news. Most stocks are mixed.</p>
     </div>
     <div>
       <h3>Hold and Formula #</h3>
-      <p>Hold is how long the score's main reasons have tended to take to pay off. Formula # is the place from the numbers alone; Haiku can move a stock a few places only when news gives a concrete reason.</p>
+      <p>Hold is how long the score's main reasons have tended to take to pay off. Formula # is the place from the numbers alone; AI can move a stock a few places only when news gives a concrete reason.</p>
     </div>
     <div>
       <h3>Click a stock</h3>
-      <p>Overview explains the score with a price chart. Analysis has returns, the 52-week range, trend, volatility and how it compares with its sector. News lists what Haiku read and other headlines. People talking shows posts from Reddit and X, with usernames hidden.</p>
+      <p>Overview explains the score with a price chart. Analysis has returns, the 52-week range, trend, volatility and how it compares with its sector. News lists articles to read. People talking shows posts from Reddit and X, with usernames hidden.</p>
     </div>
     <div>
       <h3>Where it comes from</h3>
@@ -242,7 +242,7 @@
 
       <section class="nse-pane" id="pane-news" role="tabpanel" aria-labelledby="tab-news" hidden>
         <h3>News behind the score</h3>
-        <p class="nse-sub">Articles Haiku read and tagged as good or bad for shareholders.</p>
+        <p class="nse-sub">Articles to read, marked good or bad for shareholders.</p>
         <ul class="nse-news" data-draw="d-news" data-source="news"></ul>
         <h3>Other articles naming it</h3>
         <p class="nse-sub">Headlines from the last 30 days that mention the company but weren't scored (Business Daily is headline-only by its rules).</p>
@@ -261,7 +261,7 @@
   <section class="nse-lower">
     <div class="nse-card" id="news">
       <h2>Recent news</h2>
-      <p>Kenyan news from the last 30 days, tagged by Haiku: good (+1) or bad (-1) for shareholders, strength 1 to 3.</p>
+      <p>Kenyan news from the last 30 days: good (+1) or bad (-1) for shareholders, strength 1 to 3.</p>
       <div class="nse-scroll nse-small">
         <table class="nse-table" data-source="news" data-row-key="id">
           <thead><tr>
@@ -502,7 +502,7 @@
     if (!r) { el.textContent = '—'; return; }
     const parts = [
       `#${r.position} of ${nse.rows().length}`,
-      r.move ? `formula #${r.formula_position}, moved ${Math.abs(r.move)} ${r.move > 0 ? 'up' : 'down'} by Haiku` : null,
+      r.move ? `formula #${r.formula_position}, moved ${Math.abs(r.move)} ${r.move > 0 ? 'up' : 'down'} on the news` : null,
       `score ${nse.num1(r.score)}`,
       r.sector,
       `KES ${nse.money(r.price)} on ${nse.day(r.price_date)}`,
@@ -520,7 +520,7 @@
 
   dash.draw('d-explain', (el) => {
     const r = nse.current();
-    el.textContent = !r ? '—' : (r.explanation || 'Haiku has not reviewed this ranking yet. The formula reasons below explain the score.');
+    el.textContent = !r ? '—' : (r.explanation || 'Not reviewed yet. The formula reasons below explain the score.');
   });
 
   dash.draw('d-reasons', (el) => {
