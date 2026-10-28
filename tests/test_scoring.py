@@ -45,6 +45,10 @@ class TestFactors(unittest.TestCase):
         self.assertAlmostEqual(scoring.covered_yield(eps=4, dps=1, price=20), 0.05)
         self.assertEqual(scoring.covered_yield(eps=-1, dps=1, price=20), 0.0)
 
+    def test_impossible_yields_are_treated_as_bad_data(self):
+        self.assertIsNone(scoring.earnings_yield(120, 59))                  # BKG: EPS in RWF, price in KES
+        self.assertIsNone(scoring.covered_yield(eps=120, dps=53, price=59))
+
     def test_eps_growth_needs_two_different_results(self):
         self.assertIsNone(scoring.eps_growth([("2026-10-28", 2.0, 1.0)]))
         self.assertAlmostEqual(scoring.eps_growth([("a", 2.0, 1.0), ("b", 2.5, 1.0)]), 0.25)

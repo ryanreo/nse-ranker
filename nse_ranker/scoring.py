@@ -27,6 +27,10 @@ RISK_DAYS = 126
 MIN_RISK_DAYS = 60
 MIN_SECTOR_PEERS = 3          # fewer peers than this: compare value with the whole market
 
+# Above these, the figures are almost certainly a data error (wrong currency or units), not a bargain.
+MAX_EARNINGS_YIELD = 0.50     # a P/E under 2
+MAX_DIVIDEND_YIELD = 0.25
+
 
 # ---- Raw measures. `rows` is [(date, close, volume), ...], oldest first. ----
 
@@ -70,7 +74,7 @@ def volatility(rows):
 
 def earnings_yield(eps, price):
     """EPS / price: the inverse of P/E, so it still works for loss-makers (it goes negative)."""
-    if eps is None or not price:
+    if eps is None or not price or eps / price > MAX_EARNINGS_YIELD:
         return None
     return eps / price
 
@@ -81,7 +85,8 @@ def covered_yield(eps, dps, price):
         return None
     if eps <= 0:
         return 0.0
-    return min(dps, eps) / price
+    covered = min(dps, eps) / price
+    return covered if covered <= MAX_DIVIDEND_YIELD else None
 
 
 def eps_growth(eps_changes):

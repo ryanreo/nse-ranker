@@ -5,6 +5,7 @@
 #           "watch" = shown, but not ranked (penny stock, no recent trades, or new type)
 #           "out"   = left out (suspended, ETF, preference share, duplicate)
 # currency: "KES" for most; "USD" for the dollar-priced REITs.
+# reports_in: set when results are in another currency (EPS and dividends are then ignored).
 
 # What moves each sector. Every stock gets its sector's drivers.
 [sectors]
@@ -38,6 +39,7 @@ sector = "Banking"
 type = "share"
 currency = "KES"
 status = "rank"
+reports_in = "RWF"
 notes = "Rwandan bank, cross-listed: Rwanda's economy and franc matter"
 
 [[stock]]
@@ -307,6 +309,7 @@ sector = "Energy and Petroleum"
 type = "share"
 currency = "KES"
 status = "rank"
+reports_in = "UGX"
 notes = "Ugandan power distributor; check current business status"
 
 [[stock]]
