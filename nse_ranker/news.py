@@ -4,6 +4,7 @@ Sources and topics are listed in news.toml. Matching is by name: each stock's al
 watchlist.toml, and each topic's keywords in news.toml.
 """
 import html
+import http.client
 import json
 import re
 import tomllib
@@ -196,7 +197,10 @@ def read_sitemap_source(db, source, since, limit, url_filter=None, newest_lists=
     articles = []
     chosen = sorted(wanted, reverse=True)[:limit]   # newest first
     for i, (_, url) in enumerate(chosen, 1):
-        page = web.get(url, delay=2)
+        try:
+            page = web.get(url, delay=2)
+        except (OSError, http.client.HTTPException):   # a timeout or a cut-off download: skip this page
+            continue
         article = parse_article_page(page.decode("utf-8", errors="replace"), url, source) if page else None
         if article and matcher:
             save_articles(db, [article], matcher)
