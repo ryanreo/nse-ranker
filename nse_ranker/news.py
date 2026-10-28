@@ -4,6 +4,7 @@ Sources and topics are listed in news.toml. Matching is by name: each stock's al
 watchlist.toml, and each topic's keywords in news.toml.
 """
 import html
+import json
 import re
 import tomllib
 import xml.etree.ElementTree as ET
@@ -79,8 +80,10 @@ def parse_feed(xml_bytes, source):
 # ---- Matching ----
 
 def _pattern(name):
-    """Whole-word pattern. ALL-CAPS names (KCB, EABL) must match exactly; others ignore case."""
-    flags = 0 if name.upper() == name and any(c.isalpha() for c in name) else re.IGNORECASE
+    """Whole-word pattern. ALL-CAPS names (KCB, EABL) and single capitalised words (Equity, Unga)
+    must match exactly, so "private equity" isn't Equity Group; longer names ignore case."""
+    exact = (name.upper() == name and any(c.isalpha() for c in name)) or (" " not in name and name[:1].isupper())
+    flags = 0 if exact else re.IGNORECASE
     return re.compile(rf"(?<!\w){re.escape(name)}(?!\w)", flags)
 
 
@@ -129,14 +132,93 @@ def rematch(db, matcher):
     return len(rows)
 
 
-def fetch_all(db):
-    """Read every feed in news.toml and store new articles. Returns {source: (items, new)}."""
+def parse_article_page(page, url, source):
+    """One article page -> article dict, from its schema.org NewsArticle data and its paragraphs."""
+    data = {}
+    for block in re.findall(r'<script[^>]*application/ld\+json[^>]*>(.*?)</script>', page, re.S) or \
+            re.findall(r'(\{"@context":"https://schema.org","@type":"NewsArticle".*?\})(?=\{"@context"|<|$)', page, re.S):
+        try:
+            candidate = json.loads(block)
+        except ValueError:
+            continue
+        if isinstance(candidate, dict) and candidate.get("@type") == "NewsArticle":
+            data = candidate
+            break
+    title = data.get("headline") or (re.search(r"<title>(.*?)</title>", page, re.S) or [None, ""])[1]
+    published = data.get("datePublished")
+    if not title or not published:
+        return None
+    paragraphs = [clean(p) for p in re.findall(r"<p[^>]*>(.*?)</p>", page, re.S)]
+    body = [p for p in paragraphs if 40 <= len(p) <= 2000 and "@context" not in p and "TURBOPACK" not in p]
+    return {
+        "url": clean_url(url), "source": source["name"],
+        "published": datetime.fromisoformat(published.replace("Z", "+00:00")).astimezone(timezone.utc)
+                     .isoformat(timespec="seconds"),
+        "title": clean(title).split(" | ")[0], "summary": clean(data.get("description")),
+        "text": " ".join(body) or None, "ai_use": int(source["ai_use"]),
+    }
+
+
+def sitemap_urls(xml_bytes):
+    """[(url, lastmod), ...] from a sitemap or a sitemap index."""
+    root = ET.fromstring(xml_bytes)
+    found = []
+    for entry in root:
+        loc = entry.findtext("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")
+        lastmod = entry.findtext("{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod") or ""
+        if loc:
+            found.append((loc.strip(), lastmod.strip()))
+    return found
+
+
+def read_sitemap_source(db, source, since, limit):
+    """New articles from a sitemap source: recent posts not already stored, at most `limit` pages."""
+    index = sitemap_urls(web.get(source["sitemap"], delay=2) or b"<urlset/>")
+    children = [(u, m) for u, m in index if m[:10] >= since]   # child sitemaps changed in the window
+    known = {u for (u,) in db.execute("SELECT url FROM articles")}
+    wanted = []
+    for child, _ in children:
+        for url, lastmod in sitemap_urls(web.get(child, delay=2) or b"<urlset/>"):
+            if lastmod[:10] >= since and clean_url(url) not in known:
+                wanted.append((lastmod, url))
+    articles = []
+    for _, url in sorted(wanted, reverse=True)[:limit]:   # newest first
+        page = web.get(url, delay=2)
+        article = parse_article_page(page.decode("utf-8", errors="replace"), url, source) if page else None
+        if article and article["published"][:10] >= since:
+            articles.append(article)
+    return articles
+
+
+def read_feed_source(source, since, backfill):
+    """Articles from an RSS feed; with backfill, also its older pages back to `since`."""
+    articles = []
+    for page in range(1, (source.get("pages", 1) if backfill else 1) + 1):
+        url = source["feed"] if page == 1 else f"{source['feed']}?paged={page}"
+        body = web.get(url, delay=2)
+        items = parse_feed(body, source) if body else []
+        articles += items
+        if not items or min(a["published"] for a in items)[:10] < since:
+            break
+    return articles
+
+
+def fetch_all(db, backfill=False, days=30):
+    """Read every source in news.toml and store new articles. Returns {source: (items, new)}.
+
+    Without backfill: each feed's latest page, and up to 40 new sitemap articles.
+    With backfill: feeds' older pages and up to 400 sitemap articles, back `days` days.
+    """
+    db.executescript(SCHEMA)
     config = load_config()
     matcher = Matcher(load_watchlist(), config["topics"])
+    since = (date.today() - timedelta(days=days)).isoformat()
     report = {}
     for source in config["source"]:
-        body = web.get(source["feed"], delay=2)
-        articles = parse_feed(body, source) if body else []
+        if "sitemap" in source:
+            articles = read_sitemap_source(db, source, since, limit=400 if backfill else 40)
+        else:
+            articles = read_feed_source(source, since, backfill)
         report[source["name"]] = (len(articles), save_articles(db, articles, matcher))
     rematch(db, matcher)
     return report

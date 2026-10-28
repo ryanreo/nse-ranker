@@ -22,6 +22,14 @@ ai_use = true
 [[source]]
 name = "Capital FM (business)"
 feed = "https://capitalfm.africa/business/feed/"
+pages = 20          # with --backfill, also read older feed pages (?paged=2..20), about a month
+ai_use = true
+
+# Kenyan Wall Street: NSE-focused. Its feed is blocked (403), so read its sitemap for recent posts
+# and fetch each new article page (robots.txt allows article pages; /api/ is off limits).
+[[source]]
+name = "Kenyan Wall Street"
+sitemap = "https://kenyanwallstreet.com/sitemap.xml"
 ai_use = true
 
 [[source]]
@@ -42,5 +50,13 @@ ai_use = true
 "tea" = { sectors = ["Agricultural"], keywords = ["tea auction", "tea prices", "tea exports", "Mombasa auction"] }
 "weather" = { sectors = ["Agricultural", "Energy and Petroleum"], keywords = ["drought", "rainfall", "long rains", "short rains", "El Nino", "La Nina", "dam levels"] }
 "tourism" = { sectors = ["Commercial and Services"], keywords = ["tourism", "tourist arrivals", "hotel occupancy"] }
-"stock market" = { sectors = ["all"], keywords = ["Nairobi Securities Exchange", "NSE", "NASI", "bourse", "foreign investors"] }
+"stock market" = { sectors = ["all"], keywords = ["Nairobi Securities Exchange", "NSE", "NASI", "bourse", "foreign investors", "IPO", "listed companies", "share prices", "dividend payout", "Capital Markets Authority", "CMA"] }
+"banks" = { sectors = ["Banking"], keywords = ["lenders", "Kenyan banks", "banking sector", "banking industry", "commercial banks", "tier one banks", "non-performing loans", "bad loans", "NPLs", "loan book", "Kenya Bankers Association"] }
+"insurers" = { sectors = ["Insurance"], keywords = ["insurers", "insurance industry", "insurance sector", "underwriters", "Insurance Regulatory Authority", "IRA", "premiums"] }
+"telecoms" = { sectors = ["Telecommunication"], keywords = ["telcos", "telecoms", "Communications Authority", "mobile money", "data prices", "spectrum"] }
+"energy" = { sectors = ["Energy and Petroleum"], keywords = ["electricity", "power supply", "geothermal", "hydropower", "oil marketers", "fuel subsidy", "power purchase"] }
+"manufacturing" = { sectors = ["Manufacturing and Allied", "Construction and Allied"], keywords = ["manufacturers", "Kenya Association of Manufacturers", "KAM", "cement", "raw materials", "import duty"] }
+"agriculture" = { sectors = ["Agricultural"], keywords = ["farmers", "coffee prices", "avocado exports", "macadamia", "horticulture", "fertiliser"] }
+"media" = { sectors = ["Commercial and Services"], keywords = ["advertising revenue", "media industry", "airline", "aviation", "retailers", "supermarkets"] }
+"real estate" = { sectors = ["Investment", "Real Estate Investment Trusts"], keywords = ["REIT", "REITs", "real estate", "property market", "housing market"] }
 "politics" = { sectors = ["all"], keywords = ["election", "elections", "IEBC", "anti-government protests", "street protests", "demonstrations"] }

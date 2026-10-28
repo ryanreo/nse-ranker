@@ -5,7 +5,8 @@
 #           "watch" = shown, but not ranked (penny stock, no recent trades, or new type)
 #           "out"   = left out (suspended, ETF, preference share, duplicate)
 # currency: "KES" for most; "USD" for the dollar-priced REITs.
-# aliases:  names the papers use; ALL-CAPS ones must match exactly, the rest ignore case.
+# aliases:  names people use, kept broad on purpose: Haiku throws out articles that only mention a
+#           name in passing. ALL-CAPS ones must match exactly, the rest ignore case.
 # reports_in: set when results are in another currency (EPS and dividends are then ignored).
 
 # What moves each sector. Every stock gets its sector's drivers.
@@ -28,7 +29,7 @@
 [[stock]]
 ticker = "ABSA"
 name = "Absa Bank Kenya"
-aliases = ["Absa"]
+aliases = ["Absa", "Absa Bank", "Absa Kenya", "ABSA"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -37,7 +38,7 @@ status = "rank"
 [[stock]]
 ticker = "BKG"
 name = "BK Group"
-aliases = ["BK Group", "Bank of Kigali"]
+aliases = ["BK Group", "Bank of Kigali", "BKG"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -48,7 +49,7 @@ notes = "Rwandan bank, cross-listed: Rwanda's economy and franc matter"
 [[stock]]
 ticker = "COOP"
 name = "Co-operative Bank"
-aliases = ["Co-op Bank", "Co-operative Bank", "Cooperative Bank"]
+aliases = ["Co-op Bank", "Co-operative Bank", "Cooperative Bank", "Co-op", "COOP", "Coop Bank"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -57,7 +58,7 @@ status = "rank"
 [[stock]]
 ticker = "DTK"
 name = "Diamond Trust Bank"
-aliases = ["Diamond Trust", "DTB"]
+aliases = ["Diamond Trust", "DTB", "DTK", "Diamond Trust Bank"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -67,7 +68,7 @@ notes = "regional (Tanzania, Uganda)"
 [[stock]]
 ticker = "EQTY"
 name = "Equity Group"
-aliases = ["Equity Bank", "Equity Group"]
+aliases = ["Equity Bank", "Equity Group", "Equity", "EQTY", "Equity Group Holdings"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -77,7 +78,7 @@ notes = "big regional exposure (DRC, Uganda, Rwanda)"
 [[stock]]
 ticker = "FMLY"
 name = "Family Bank"
-aliases = ["Family Bank"]
+aliases = ["Family Bank", "FMLY"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -87,7 +88,7 @@ notes = "newly listed in 2026; short price history"
 [[stock]]
 ticker = "HFCB"
 name = "HFCB Group (formerly HF Group)"
-aliases = ["HFCB", "HF Group", "Housing Finance"]
+aliases = ["HFCB", "HF Group", "Housing Finance", "HF", "HFC"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -107,7 +108,7 @@ notes = "duplicate of HFCB; drop"
 [[stock]]
 ticker = "IMH"
 name = "I&M Holdings"
-aliases = ["I&M"]
+aliases = ["I&M", "I&M Bank", "I&M Group", "IMH"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -116,7 +117,7 @@ status = "rank"
 [[stock]]
 ticker = "KCB"
 name = "KCB Group"
-aliases = ["KCB"]
+aliases = ["KCB", "KCB Bank", "KCB Group"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -125,7 +126,7 @@ status = "rank"
 [[stock]]
 ticker = "NCBA"
 name = "NCBA Group"
-aliases = ["NCBA"]
+aliases = ["NCBA", "NCBA Bank", "Nedbank"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -134,7 +135,7 @@ status = "rank"
 [[stock]]
 ticker = "SBIC"
 name = "Stanbic Holdings"
-aliases = ["Stanbic"]
+aliases = ["Stanbic", "Stanbic Bank", "Stanbic Holdings", "SBIC"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -143,7 +144,7 @@ status = "rank"
 [[stock]]
 ticker = "SCBK"
 name = "Standard Chartered Kenya"
-aliases = ["Standard Chartered", "StanChart"]
+aliases = ["Standard Chartered", "StanChart", "StanChart Kenya", "SCBK"]
 sector = "Banking"
 type = "share"
 currency = "KES"
@@ -153,7 +154,7 @@ notes = "high payout; dividend cut in 2026"
 [[stock]]
 ticker = "SCOM"
 name = "Safaricom"
-aliases = ["Safaricom", "M-Pesa", "M-PESA"]
+aliases = ["Safaricom", "M-Pesa", "M-PESA", "SCOM", "Vodacom", "Safaricom Ethiopia", "Mpesa"]
 sector = "Telecommunication"
 type = "share"
 currency = "KES"
@@ -163,7 +164,7 @@ notes = "biggest stock on the NSE by far"
 [[stock]]
 ticker = "BRIT"
 name = "Britam"
-aliases = ["Britam"]
+aliases = ["Britam", "BRIT"]
 sector = "Insurance"
 type = "share"
 currency = "KES"
@@ -172,7 +173,7 @@ status = "rank"
 [[stock]]
 ticker = "CIC"
 name = "CIC Insurance"
-aliases = ["CIC Insurance", "CIC Group"]
+aliases = ["CIC Insurance", "CIC Group", "CIC"]
 sector = "Insurance"
 type = "share"
 currency = "KES"
@@ -181,7 +182,7 @@ status = "rank"
 [[stock]]
 ticker = "JUB"
 name = "Jubilee Holdings"
-aliases = ["Jubilee Holdings", "Jubilee Insurance", "Jubilee Health"]
+aliases = ["Jubilee Holdings", "Jubilee Insurance", "Jubilee Health", "Jubilee", "JUB"]
 sector = "Insurance"
 type = "share"
 currency = "KES"
@@ -190,7 +191,7 @@ status = "rank"
 [[stock]]
 ticker = "KNRE"
 name = "Kenya Re"
-aliases = ["Kenya Re", "Kenya Reinsurance", "KenRe"]
+aliases = ["Kenya Re", "Kenya Reinsurance", "KenRe", "KNRE", "Kenya Reinsurance Corporation"]
 sector = "Insurance"
 type = "share"
 currency = "KES"
@@ -200,7 +201,7 @@ notes = "state-controlled"
 [[stock]]
 ticker = "LBTY"
 name = "Liberty Kenya"
-aliases = ["Liberty Kenya", "Liberty Life"]
+aliases = ["Liberty Kenya", "Liberty Life", "LBTY", "Heritage Insurance"]
 sector = "Insurance"
 type = "share"
 currency = "KES"
@@ -209,7 +210,7 @@ status = "rank"
 [[stock]]
 ticker = "SLAM"
 name = "Sanlam Allianz"
-aliases = ["Sanlam"]
+aliases = ["Sanlam", "Sanlam Allianz", "Sanlam Kenya", "SLAM", "Allianz Kenya"]
 sector = "Insurance"
 type = "share"
 currency = "KES"
@@ -218,7 +219,7 @@ status = "rank"
 [[stock]]
 ticker = "EGAD"
 name = "Eaagads"
-aliases = ["Eaagads"]
+aliases = ["Eaagads", "EGAD"]
 sector = "Agricultural"
 type = "share"
 currency = "KES"
@@ -228,7 +229,7 @@ notes = "coffee; thin trading likely"
 [[stock]]
 ticker = "KAPC"
 name = "Kapchorua Tea"
-aliases = ["Kapchorua"]
+aliases = ["Kapchorua", "KAPC", "Kapchorua Tea"]
 sector = "Agricultural"
 type = "share"
 currency = "KES"
@@ -238,7 +239,7 @@ notes = "tea prices; thin trading likely"
 [[stock]]
 ticker = "KUKZ"
 name = "Kakuzi"
-aliases = ["Kakuzi"]
+aliases = ["Kakuzi", "KUKZ"]
 sector = "Agricultural"
 type = "share"
 currency = "KES"
@@ -248,7 +249,7 @@ notes = "avocados, macadamia"
 [[stock]]
 ticker = "LIMT"
 name = "Limuru Tea"
-aliases = ["Limuru Tea"]
+aliases = ["Limuru Tea", "LIMT", "Limuru"]
 sector = "Agricultural"
 type = "share"
 currency = "KES"
@@ -258,7 +259,7 @@ notes = "thin trading likely"
 [[stock]]
 ticker = "SASN"
 name = "Sasini"
-aliases = ["Sasini"]
+aliases = ["Sasini", "SASN"]
 sector = "Agricultural"
 type = "share"
 currency = "KES"
@@ -268,7 +269,7 @@ notes = "tea and coffee"
 [[stock]]
 ticker = "WTK"
 name = "Williamson Tea"
-aliases = ["Williamson Tea"]
+aliases = ["Williamson Tea", "Williamson", "WTK"]
 sector = "Agricultural"
 type = "share"
 currency = "KES"
@@ -278,7 +279,7 @@ notes = "tea prices"
 [[stock]]
 ticker = "KEGN"
 name = "KenGen"
-aliases = ["KenGen"]
+aliases = ["KenGen", "KEGN", "Kenya Electricity Generating Company"]
 sector = "Energy and Petroleum"
 type = "share"
 currency = "KES"
@@ -288,7 +289,7 @@ notes = "hydro (rainfall), geothermal; state-controlled"
 [[stock]]
 ticker = "KPLC"
 name = "Kenya Power"
-aliases = ["Kenya Power", "KPLC"]
+aliases = ["Kenya Power", "KPLC", "Kenya Power and Lighting"]
 sector = "Energy and Petroleum"
 type = "share"
 currency = "KES"
@@ -318,7 +319,7 @@ notes = "same"
 [[stock]]
 ticker = "KPC"
 name = "Kenya Pipeline"
-aliases = ["Kenya Pipeline", "KPC"]
+aliases = ["Kenya Pipeline", "KPC", "Kenya Pipeline Company"]
 sector = "Energy and Petroleum"
 type = "share"
 currency = "KES"
@@ -328,7 +329,7 @@ notes = "IPO at KES 9.00, listed 10 Mar 2026; short history"
 [[stock]]
 ticker = "TOTL"
 name = "TotalEnergies Marketing"
-aliases = ["TotalEnergies", "Total Kenya"]
+aliases = ["TotalEnergies", "Total Kenya", "TotalEnergies Kenya", "TOTL", "TotalEnergies Marketing"]
 sector = "Energy and Petroleum"
 type = "share"
 currency = "KES"
@@ -338,7 +339,7 @@ notes = "fuel margins set by EPRA"
 [[stock]]
 ticker = "UMME"
 name = "Umeme"
-aliases = ["Umeme"]
+aliases = ["Umeme", "UMME"]
 sector = "Energy and Petroleum"
 type = "share"
 currency = "KES"
@@ -349,7 +350,7 @@ notes = "Ugandan power distributor; check current business status"
 [[stock]]
 ticker = "AMAC"
 name = "Africa Mega Agricorp"
-aliases = ["Africa Mega Agricorp"]
+aliases = ["Africa Mega Agricorp", "AMAC", "Mega Agricorp"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -359,7 +360,7 @@ notes = "thin trading likely"
 [[stock]]
 ticker = "BAT"
 name = "BAT Kenya"
-aliases = ["BAT Kenya", "British American Tobacco"]
+aliases = ["BAT Kenya", "British American Tobacco", "BAT"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -369,7 +370,7 @@ notes = "excise duty, high payout"
 [[stock]]
 ticker = "BOC"
 name = "BOC Kenya"
-aliases = ["BOC Kenya"]
+aliases = ["BOC Kenya", "BOC", "BOC Gases"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -379,7 +380,7 @@ notes = "industrial gases; thin trading"
 [[stock]]
 ticker = "CARB"
 name = "Carbacid"
-aliases = ["Carbacid"]
+aliases = ["Carbacid", "CARB", "Carbacid Investments"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -389,7 +390,7 @@ notes = "carbon dioxide producer"
 [[stock]]
 ticker = "EABL"
 name = "East African Breweries"
-aliases = ["EABL", "East African Breweries", "Kenya Breweries"]
+aliases = ["EABL", "East African Breweries", "Kenya Breweries", "Diageo", "KBL", "Kenya Breweries Limited", "Tusker"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -399,7 +400,7 @@ notes = "excise duty, barley costs"
 [[stock]]
 ticker = "FTGH"
 name = "Flame Tree Group"
-aliases = ["Flame Tree"]
+aliases = ["Flame Tree", "FTGH", "Flame Tree Group"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -408,7 +409,7 @@ status = "rank"
 [[stock]]
 ticker = "SKL"
 name = "Shri Krishana Overseas"
-aliases = ["Shri Krishana"]
+aliases = ["Shri Krishana", "SKL", "Shri Krishana Overseas"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -418,7 +419,7 @@ notes = "recent small listing; business to research"
 [[stock]]
 ticker = "UNGA"
 name = "Unga Group"
-aliases = ["Unga Group", "Unga Limited"]
+aliases = ["Unga Group", "Unga Limited", "Unga", "UNGA"]
 sector = "Manufacturing and Allied"
 type = "share"
 currency = "KES"
@@ -428,7 +429,7 @@ notes = "maize and wheat prices"
 [[stock]]
 ticker = "CGEN"
 name = "Car and General"
-aliases = ["Car & General", "Car and General"]
+aliases = ["Car & General", "Car and General", "CGEN", "Car & General Kenya"]
 sector = "Automobiles and Accessories"
 type = "share"
 currency = "KES"
@@ -438,7 +439,7 @@ notes = "motorcycles and machinery"
 [[stock]]
 ticker = "CRWN"
 name = "Crown Paints"
-aliases = ["Crown Paints"]
+aliases = ["Crown Paints", "Crown Paints Kenya", "CRWN"]
 sector = "Construction and Allied"
 type = "share"
 currency = "KES"
@@ -447,7 +448,7 @@ status = "rank"
 [[stock]]
 ticker = "PORT"
 name = "EA Portland Cement"
-aliases = ["Portland Cement", "EAPCC"]
+aliases = ["Portland Cement", "EAPCC", "East African Portland", "EA Portland", "EAPC"]
 sector = "Construction and Allied"
 type = "share"
 currency = "KES"
@@ -496,7 +497,7 @@ notes = "suspended, in administration"
 [[stock]]
 ticker = "EVRD"
 name = "Eveready East Africa"
-aliases = ["Eveready"]
+aliases = ["Eveready", "EVRD"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -506,7 +507,7 @@ notes = "penny stock"
 [[stock]]
 ticker = "HBE"
 name = "Homeboyz Entertainment"
-aliases = ["Homeboyz"]
+aliases = ["Homeboyz", "HBE"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -516,7 +517,7 @@ notes = "no recent trades shown"
 [[stock]]
 ticker = "KQ"
 name = "Kenya Airways"
-aliases = ["Kenya Airways", "KQ"]
+aliases = ["Kenya Airways", "KQ", "KQ's"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -526,7 +527,7 @@ notes = "fuel prices, tourism, government support"
 [[stock]]
 ticker = "LKL"
 name = "Longhorn Publishers"
-aliases = ["Longhorn Publishers"]
+aliases = ["Longhorn Publishers", "Longhorn", "LKL"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -536,7 +537,7 @@ notes = "textbook demand, curriculum"
 [[stock]]
 ticker = "NBV"
 name = "Nairobi Business Ventures"
-aliases = ["Nairobi Business Ventures"]
+aliases = ["Nairobi Business Ventures", "NBV"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -546,7 +547,7 @@ notes = "penny stock"
 [[stock]]
 ticker = "NMG"
 name = "Nation Media Group"
-aliases = ["Nation Media", "NMG"]
+aliases = ["Nation Media", "NMG", "Nation Media Group"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -556,7 +557,7 @@ notes = "advertising revenue"
 [[stock]]
 ticker = "SGL"
 name = "Standard Group"
-aliases = ["Standard Group"]
+aliases = ["Standard Group", "SGL", "Standard Media Group"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -566,7 +567,7 @@ notes = "advertising revenue"
 [[stock]]
 ticker = "SMER"
 name = "Sameer Africa"
-aliases = ["Sameer Africa"]
+aliases = ["Sameer Africa", "Sameer", "SMER"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -575,7 +576,7 @@ status = "rank"
 [[stock]]
 ticker = "SCAN"
 name = "WPP ScanGroup"
-aliases = ["Scangroup"]
+aliases = ["Scangroup", "WPP Scangroup", "SCAN"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -585,7 +586,7 @@ notes = "advertising"
 [[stock]]
 ticker = "TPSE"
 name = "TPS Serena"
-aliases = ["TPS Eastern Africa", "TPS Serena", "Serena Hotels"]
+aliases = ["TPS Eastern Africa", "TPS Serena", "Serena Hotels", "Serena", "TPSE"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -595,7 +596,7 @@ notes = "tourism"
 [[stock]]
 ticker = "UCHM"
 name = "Uchumi"
-aliases = ["Uchumi"]
+aliases = ["Uchumi", "UCHM"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -605,7 +606,7 @@ notes = "penny stock, restructuring"
 [[stock]]
 ticker = "XPRS"
 name = "Express Kenya"
-aliases = ["Express Kenya"]
+aliases = ["Express Kenya", "XPRS"]
 sector = "Commercial and Services"
 type = "share"
 currency = "KES"
@@ -615,7 +616,7 @@ notes = "logistics"
 [[stock]]
 ticker = "CTUM"
 name = "Centum Investment"
-aliases = ["Centum"]
+aliases = ["Centum", "CTUM", "Centum Investment"]
 sector = "Investment"
 type = "share"
 currency = "KES"
@@ -625,7 +626,7 @@ notes = "trades at a discount to its assets"
 [[stock]]
 ticker = "HAFR"
 name = "Home Afrika"
-aliases = ["Home Afrika"]
+aliases = ["Home Afrika", "HAFR"]
 sector = "Investment"
 type = "share"
 currency = "KES"
@@ -635,7 +636,7 @@ notes = "penny stock"
 [[stock]]
 ticker = "KURV"
 name = "Kurwitu Ventures"
-aliases = ["Kurwitu"]
+aliases = ["Kurwitu", "KURV"]
 sector = "Investment"
 type = "share"
 currency = "KES"
@@ -645,7 +646,7 @@ notes = "no recent trades shown"
 [[stock]]
 ticker = "OCH"
 name = "Olympia Capital"
-aliases = ["Olympia Capital", "Olympia"]
+aliases = ["Olympia Capital", "Olympia", "OCH"]
 sector = "Investment"
 type = "share"
 currency = "KES"
@@ -664,7 +665,7 @@ notes = "suspended June 2025"
 [[stock]]
 ticker = "NSE"
 name = "Nairobi Securities Exchange"
-aliases = ["NSE Plc", "Nairobi Securities Exchange Plc"]
+aliases = ["NSE Plc", "Nairobi Securities Exchange Plc", "Nairobi Securities Exchange", "NSE", "Nairobi bourse"]
 sector = "Investment Services"
 type = "share"
 currency = "KES"
@@ -684,7 +685,7 @@ notes = "suspended since 2019"
 [[stock]]
 ticker = "ALP"
 name = "ALP Industrial REIT"
-aliases = ["ALP Industrial REIT", "Africa Logistics Properties"]
+aliases = ["ALP Industrial REIT", "Africa Logistics Properties", "ALP REIT"]
 sector = "Real Estate Investment Trusts"
 type = "REIT"
 currency = "USD"
@@ -694,7 +695,7 @@ notes = "listed 11 Mar 2026, **priced in US dollars**"
 [[stock]]
 ticker = "LAPR"
 name = "LAPTrust Imara I-REIT"
-aliases = ["Laptrust Imara", "LAPTrust Imara"]
+aliases = ["Laptrust Imara", "LAPTrust Imara", "Laptrust", "LAPTrust", "LAPR"]
 sector = "Real Estate Investment Trusts"
 type = "REIT"
 currency = "KES"
@@ -704,7 +705,7 @@ notes = "no recent trades shown"
 [[stock]]
 ticker = "TRFC"
 name = "TRIFIC Green USD I-REIT"
-aliases = ["TRIFIC"]
+aliases = ["TRIFIC", "TRFC"]
 sector = "Real Estate Investment Trusts"
 type = "REIT"
 currency = "USD"
