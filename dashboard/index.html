@@ -285,9 +285,10 @@
           throw new Error(typeof answer.error === 'string' ? answer.error : (answer.error.message || 'Supabase query failed'));
         }
         const text = typeof answer === 'string' ? answer : (answer && answer.result) || '';
-        const match = text.match(/<untrusted-data-[\w-]+>\s*([\s\S]*?)\s*<\/untrusted-data-[\w-]+>/);
+        // The marker also appears inside the warning sentence, so take the one that starts its own line.
+        const match = text.match(/\n<untrusted-data-([\w-]+)>\n([\s\S]*?)\n<\/untrusted-data-\1>/);
         if (!match) throw new Error(text.slice(0, 200) || 'Supabase returned no rows');
-        return JSON.parse(match[1]);
+        return JSON.parse(match[2]);
       },
     });
   });
