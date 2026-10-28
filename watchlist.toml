@@ -1,0 +1,657 @@
+# My NSE watchlist: the 72 counters from the 27 Oct 2026 heatmap.
+# Built from docs/RESEARCH.md (R2). Edit this file to add or remove stocks.
+#
+# status:   "rank"  = scored and ranked
+#           "watch" = shown, but not ranked (penny stock, no recent trades, or new type)
+#           "out"   = left out (suspended, ETF, preference share, duplicate)
+# currency: "KES" for most; "USD" for the dollar-priced REITs.
+
+# What moves each sector. Every stock gets its sector's drivers.
+[sectors]
+"Banking" = ["interest rates and bond yields", "bad-loan levels", "credit growth", "capital and dividends"]
+"Telecommunication" = ["M-Pesa growth", "data revenue", "Ethiopia business", "regulation", "the shilling"]
+"Insurance" = ["claims", "investment income from bond yields", "premium growth"]
+"Agricultural" = ["auction prices", "weather and rainfall", "the shilling (exports in USD)", "input costs"]
+"Energy and Petroleum" = ["EPRA power tariffs", "fuel margins and volumes", "rainfall (hydro)", "government ownership"]
+"Manufacturing and Allied" = ["excise duty", "input costs (fuel, grain)", "consumer demand", "the shilling"]
+"Automobiles and Accessories" = ["consumer and business credit", "import costs and the shilling"]
+"Construction and Allied" = ["infrastructure spending", "housing", "cement demand"]
+"Commercial and Services" = ["consumer spending", "tourism", "advertising market"]
+"Investment" = ["value of holdings", "property market", "discount to net asset value"]
+"Investment Services" = ["market trading turnover", "new listings"]
+"Real Estate Investment Trusts" = ["rental income", "occupancy", "distributions"]
+"Exchange Traded Funds" = ["the asset the fund tracks"]
+"None" = []
+
+[[stock]]
+ticker = "ABSA"
+name = "Absa Bank Kenya"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "BKG"
+name = "BK Group"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "Rwandan bank, cross-listed: Rwanda's economy and franc matter"
+
+[[stock]]
+ticker = "COOP"
+name = "Co-operative Bank"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "DTK"
+name = "Diamond Trust Bank"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "regional (Tanzania, Uganda)"
+
+[[stock]]
+ticker = "EQTY"
+name = "Equity Group"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "big regional exposure (DRC, Uganda, Rwanda)"
+
+[[stock]]
+ticker = "FMLY"
+name = "Family Bank"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "newly listed in 2026; short price history"
+
+[[stock]]
+ticker = "HFCB"
+name = "HFCB Group (formerly HF Group)"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "renamed 22 May 2026"
+
+[[stock]]
+ticker = "HFCK"
+name = "(old code for HFCB)"
+sector = "None"
+type = "share"
+currency = "KES"
+status = "out"
+notes = "duplicate of HFCB; drop"
+
+[[stock]]
+ticker = "IMH"
+name = "I&M Holdings"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "KCB"
+name = "KCB Group"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "NCBA"
+name = "NCBA Group"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "SBIC"
+name = "Stanbic Holdings"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "SCBK"
+name = "Standard Chartered Kenya"
+sector = "Banking"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "high payout; dividend cut in 2026"
+
+[[stock]]
+ticker = "SCOM"
+name = "Safaricom"
+sector = "Telecommunication"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "biggest stock on the NSE by far"
+
+[[stock]]
+ticker = "BRIT"
+name = "Britam"
+sector = "Insurance"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "CIC"
+name = "CIC Insurance"
+sector = "Insurance"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "JUB"
+name = "Jubilee Holdings"
+sector = "Insurance"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "KNRE"
+name = "Kenya Re"
+sector = "Insurance"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "state-controlled"
+
+[[stock]]
+ticker = "LBTY"
+name = "Liberty Kenya"
+sector = "Insurance"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "SLAM"
+name = "Sanlam Allianz"
+sector = "Insurance"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "EGAD"
+name = "Eaagads"
+sector = "Agricultural"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "coffee; thin trading likely"
+
+[[stock]]
+ticker = "KAPC"
+name = "Kapchorua Tea"
+sector = "Agricultural"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "tea prices; thin trading likely"
+
+[[stock]]
+ticker = "KUKZ"
+name = "Kakuzi"
+sector = "Agricultural"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "avocados, macadamia"
+
+[[stock]]
+ticker = "LIMT"
+name = "Limuru Tea"
+sector = "Agricultural"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "thin trading likely"
+
+[[stock]]
+ticker = "SASN"
+name = "Sasini"
+sector = "Agricultural"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "tea and coffee"
+
+[[stock]]
+ticker = "WTK"
+name = "Williamson Tea"
+sector = "Agricultural"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "tea prices"
+
+[[stock]]
+ticker = "KEGN"
+name = "KenGen"
+sector = "Energy and Petroleum"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "hydro (rainfall), geothermal; state-controlled"
+
+[[stock]]
+ticker = "KPLC"
+name = "Kenya Power"
+sector = "Energy and Petroleum"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "tariffs, government policy"
+
+[[stock]]
+ticker = "KPLC-P4"
+name = "Kenya Power 4% preference"
+sector = "Energy and Petroleum"
+type = "preference share"
+currency = "KES"
+status = "out"
+notes = "fixed-dividend instrument, not comparable"
+
+[[stock]]
+ticker = "KPLC-P7"
+name = "Kenya Power 7% preference"
+sector = "Energy and Petroleum"
+type = "preference share"
+currency = "KES"
+status = "out"
+notes = "same"
+
+[[stock]]
+ticker = "KPC"
+name = "Kenya Pipeline"
+sector = "Energy and Petroleum"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "IPO at KES 9.00, listed 10 Mar 2026; short history"
+
+[[stock]]
+ticker = "TOTL"
+name = "TotalEnergies Marketing"
+sector = "Energy and Petroleum"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "fuel margins set by EPRA"
+
+[[stock]]
+ticker = "UMME"
+name = "Umeme"
+sector = "Energy and Petroleum"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "Ugandan power distributor; check current business status"
+
+[[stock]]
+ticker = "AMAC"
+name = "Africa Mega Agricorp"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "thin trading likely"
+
+[[stock]]
+ticker = "BAT"
+name = "BAT Kenya"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "excise duty, high payout"
+
+[[stock]]
+ticker = "BOC"
+name = "BOC Kenya"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "industrial gases; thin trading"
+
+[[stock]]
+ticker = "CARB"
+name = "Carbacid"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "carbon dioxide producer"
+
+[[stock]]
+ticker = "EABL"
+name = "East African Breweries"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "excise duty, barley costs"
+
+[[stock]]
+ticker = "FTGH"
+name = "Flame Tree Group"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "SKL"
+name = "Shri Krishana Overseas"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "recent small listing; business to research"
+
+[[stock]]
+ticker = "UNGA"
+name = "Unga Group"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "maize and wheat prices"
+
+[[stock]]
+ticker = "CGEN"
+name = "Car and General"
+sector = "Automobiles and Accessories"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "motorcycles and machinery"
+
+[[stock]]
+ticker = "CRWN"
+name = "Crown Paints"
+sector = "Construction and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "PORT"
+name = "EA Portland Cement"
+sector = "Construction and Allied"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "ARM"
+name = "ARM Cement"
+sector = "Construction and Allied"
+type = "share"
+currency = "KES"
+status = "out"
+notes = "suspended since 2018, in receivership"
+
+[[stock]]
+ticker = "BAMB"
+name = "Bamburi Cement"
+sector = "Construction and Allied"
+type = "share"
+currency = "KES"
+status = "out"
+notes = "suspended after the Amsons takeover in 2025"
+
+[[stock]]
+ticker = "CABL"
+name = "East African Cables"
+sector = "Construction and Allied"
+type = "share"
+currency = "KES"
+status = "out"
+notes = "suspended June 2025"
+
+[[stock]]
+ticker = "DCON"
+name = "Deacons East Africa"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "out"
+notes = "suspended, in administration"
+
+[[stock]]
+ticker = "EVRD"
+name = "Eveready East Africa"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "watch"
+notes = "penny stock"
+
+[[stock]]
+ticker = "HBE"
+name = "Homeboyz Entertainment"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "watch"
+notes = "no recent trades shown"
+
+[[stock]]
+ticker = "KQ"
+name = "Kenya Airways"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "fuel prices, tourism, government support"
+
+[[stock]]
+ticker = "LKL"
+name = "Longhorn Publishers"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "textbook demand, curriculum"
+
+[[stock]]
+ticker = "NBV"
+name = "Nairobi Business Ventures"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "watch"
+notes = "penny stock"
+
+[[stock]]
+ticker = "NMG"
+name = "Nation Media Group"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "advertising revenue"
+
+[[stock]]
+ticker = "SGL"
+name = "Standard Group"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "advertising revenue"
+
+[[stock]]
+ticker = "SMER"
+name = "Sameer Africa"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "SCAN"
+name = "WPP ScanGroup"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "advertising"
+
+[[stock]]
+ticker = "TPSE"
+name = "TPS Serena"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "tourism"
+
+[[stock]]
+ticker = "UCHM"
+name = "Uchumi"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "watch"
+notes = "penny stock, restructuring"
+
+[[stock]]
+ticker = "XPRS"
+name = "Express Kenya"
+sector = "Commercial and Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "logistics"
+
+[[stock]]
+ticker = "CTUM"
+name = "Centum Investment"
+sector = "Investment"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "trades at a discount to its assets"
+
+[[stock]]
+ticker = "HAFR"
+name = "Home Afrika"
+sector = "Investment"
+type = "share"
+currency = "KES"
+status = "watch"
+notes = "penny stock"
+
+[[stock]]
+ticker = "KURV"
+name = "Kurwitu Ventures"
+sector = "Investment"
+type = "share"
+currency = "KES"
+status = "watch"
+notes = "no recent trades shown"
+
+[[stock]]
+ticker = "OCH"
+name = "Olympia Capital"
+sector = "Investment"
+type = "share"
+currency = "KES"
+status = "rank"
+
+[[stock]]
+ticker = "TCL"
+name = "TransCentury"
+sector = "Investment"
+type = "share"
+currency = "KES"
+status = "out"
+notes = "suspended June 2025"
+
+[[stock]]
+ticker = "NSE"
+name = "Nairobi Securities Exchange"
+sector = "Investment Services"
+type = "share"
+currency = "KES"
+status = "rank"
+notes = "earns from trading turnover"
+
+[[stock]]
+ticker = "MSC"
+name = "Mumias Sugar"
+sector = "Manufacturing and Allied"
+type = "share"
+currency = "KES"
+status = "out"
+notes = "suspended since 2019"
+
+[[stock]]
+ticker = "ALP"
+name = "ALP Industrial REIT"
+sector = "Real Estate Investment Trusts"
+type = "REIT"
+currency = "USD"
+status = "watch"
+notes = "listed 11 Mar 2026, **priced in US dollars**"
+
+[[stock]]
+ticker = "LAPR"
+name = "LAPTrust Imara I-REIT"
+sector = "Real Estate Investment Trusts"
+type = "REIT"
+currency = "KES"
+status = "watch"
+notes = "no recent trades shown"
+
+[[stock]]
+ticker = "TRFC"
+name = "TRIFIC Green USD I-REIT"
+sector = "Real Estate Investment Trusts"
+type = "REIT"
+currency = "USD"
+status = "watch"
+notes = "not verified yet; the name suggests US-dollar pricing"
+
+[[stock]]
+ticker = "GLD"
+name = "Absa NewGold ETF"
+sector = "Exchange Traded Funds"
+type = "gold ETF"
+currency = "KES"
+status = "out"
+notes = "tracks gold, not a company"
+
+[[stock]]
+ticker = "SMWF"
+name = "Satrix MSCI World Feeder"
+sector = "Exchange Traded Funds"
+type = "global ETF"
+currency = "KES"
+status = "out"
+notes = "tracks world stocks"
+
