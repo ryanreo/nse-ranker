@@ -28,6 +28,7 @@ python -m nse_ranker news tag           # Haiku reads and tags new articles (ran
 python -m nse_ranker opinion fetch      # Reddit and X posts per stock, summarised by Haiku
 python -m nse_ranker rank               # ranked list with Haiku's review (--top N, --no-save, --no-ai)
 python -m nse_ranker export             # write the dashboard data files to reports/dashboard/
+python -m nse_ranker backtest           # test momentum and risk on 2008-2026 history
 python -m unittest                      # tests
 ```
 Prices and articles are stored in `data/nse.sqlite` (not committed). The feeds only hold the last day
@@ -63,4 +64,4 @@ Haiku runs through the `claude` CLI (`claude -p --model haiku`), with no tools, 
 - [x] 5. Ranking command
 - [x] 6. Kenyan news scraper
 - [x] 7. Haiku insight layer (Agent-Reach, Reddit, X)
-- [ ] 8. Backtest the score
+- [x] 8. Backtest the score (see docs/BACKTEST.md)
