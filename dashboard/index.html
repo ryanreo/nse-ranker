@@ -221,6 +221,11 @@
           <div><dt>Traded a day, 60-day average</dt><dd data-draw="a-val" data-metric="traded_value_60d" data-format="kes" data-source="stats">—</dd></div>
           <div><dt>Days with trades</dt><dd data-draw="a-val" data-metric="traded_days_share" data-format="pct" data-source="stats">—</dd></div>
         </dl>
+        <h3>Earnings</h3>
+        <dl class="nse-metrics">
+          <div><dt>EPS growth, latest results</dt><dd data-draw="a-val" data-metric="eps_growth" data-format="ret" data-source="ranking">—</dd></div>
+          <div><dt>Results period</dt><dd data-draw="a-val" data-metric="eps_period" data-format="text" data-source="ranking">—</dd></div>
+        </dl>
         <h3>Against its sector</h3>
         <dl class="nse-metrics">
           <div><dt>Rank in sector</dt><dd data-draw="a-sector" data-source="stats ranking">—</dd></div>
@@ -363,6 +368,7 @@
       int: (v) => String(Math.round(v)),
       money: (v) => d3.format(',.2f')(v),
       kes: (v) => `KES ${Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`,
+      text: (v) => String(v),
     },
   };
 
@@ -697,7 +703,8 @@
     const r = nse.current();
     const source = el.dataset.source === 'ranking' ? r : nse.stat();
     const value = source ? source[el.dataset.metric] : null;
-    el.textContent = value == null ? '—' : nse.formats[el.dataset.format](+value);
+    const format = el.dataset.format;
+    el.textContent = value == null ? '—' : nse.formats[format](format === 'text' ? value : +value);
   });
 
   dash.draw('a-range', (el) => {

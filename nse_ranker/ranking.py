@@ -2,7 +2,7 @@
 import json
 from datetime import date, timedelta
 
-from . import insights, opinion, scoring, store
+from . import insights, opinion, results, scoring, store
 from .watchlist import load_watchlist
 
 HISTORY_DAYS = 400   # enough calendar days for 6-month momentum plus a margin
@@ -20,6 +20,7 @@ def build_inputs(db, today=None):
     tags = insights.recent_tags(db, today)
     news = insights.news_scores(tags, watchlist, today)
     readings = opinion.latest(db, today)
+    growth = results.latest_growth(db, today)   # {ticker: (EPS growth, period)} from results news
     stocks, tags_by_ticker = [], {}
     for stock in watchlist:
         ticker = stock["ticker"]
@@ -31,6 +32,8 @@ def build_inputs(db, today=None):
             "ticker": ticker, "name": stock["name"], "sector": stock["sector"],
             "rows": store.history(db, ticker, since=since),
             "eps": eps, "dps": dps, "eps_changes": eps_changes,
+            "eps_growth": growth[ticker][0] if ticker in growth else None,
+            "eps_period": growth[ticker][1] if ticker in growth else None,
             "news": news.get(ticker),
             "opinion": opinion.opinion_score(readings[ticker]) if ticker in readings else None,
         })
@@ -110,6 +113,7 @@ def rank(db, today=None):
         result["price_date"] = stock["rows"][-1][0]
         result["reasons"] = reasons(result) if result["score"] is not None else []
         result["hold"] = hold_time(result) if result["score"] is not None else None
+        result["eps_period"] = stock.get("eps_period")
     return results, tags_by_ticker, readings
 
 

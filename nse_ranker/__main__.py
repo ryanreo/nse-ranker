@@ -3,8 +3,9 @@ import argparse
 import json
 import textwrap
 from collections import Counter
-from datetime import date
+from datetime import date, timedelta
 
+from . import results as reported_eps
 from . import backtest, export, serve, site, supabase, haiku, insights, news, opinion, prices, ranking, review, store
 from .watchlist import load_watchlist, rankable
 
@@ -46,6 +47,9 @@ def full_ranking(db, use_ai, today):
             read, kept = insights.tag_pending(db, load_watchlist(), progress=lambda m: print(m))
             if not read:
                 print("  no new articles")
+            # Earnings per share from any new results stories, for the quality factor.
+            reported_eps.read_results(db, load_watchlist(), (today - timedelta(days=400)).isoformat(),
+                                 progress=lambda m: print(m))
         except haiku.HaikuError as error:
             ai_problem = str(error)
     results, tags_by_ticker, readings = ranking.rank(db, today)

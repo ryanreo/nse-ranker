@@ -38,8 +38,8 @@ How the factors work, so you can explain them correctly:
 - value: earnings yield (1/PE) compared with the stock's own sector median, so a P/E is only "cheap" or
   "expensive" relative to its sector; don't compare P/Es across sectors.
 - dividend: yield counting only the part of the dividend that earnings cover.
-- quality: EPS growth between two results. null means a second EPS reading hasn't been collected yet,
-  not that earnings are poor.
+- quality: growth in earnings per share at the latest reported results against the same period a year
+  earlier, taken from results news. null means no results with both figures were found.
 - risk: how much the price moves day to day; 100 is calmest.
 - A null factor is missing data and is left out of the score, not counted as zero.
 The score is the weighted average of the available factors: {", ".join(f"{name} {weight}" for name, weight in WEIGHTS.items())}.
@@ -90,6 +90,7 @@ def stock_brief(position, result, tags, reading):
             "pe": round(1 / raw["value"], 1) if raw["value"] and raw["value"] > 0 else None,
             "covered_dividend_yield": None if raw["dividend"] is None else f"{raw['dividend']:.1%}",
             "typical_daily_move": None if raw["risk"] is None else f"{raw['risk']:.1%}",
+            "eps_growth": None if raw["quality"] is None else f"{raw['quality']:+.0%} ({result.get('eps_period') or 'latest results'})",
             "price": result["price"],
         },
         "news": [{"id": f"N{t['id']}", "date": t["published"][:10], "about": t["ticker"] or t["sector"],

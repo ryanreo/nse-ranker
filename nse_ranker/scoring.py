@@ -139,7 +139,8 @@ def relative_to_sector(raw, sectors):
 def score_all(stocks):
     """Score a list of stocks. Each stock is a dict with:
         ticker, sector, rows [(date, close, volume)...], eps, dps,
-        eps_changes [(date, eps, dps)...], and optional news / opinion (0-100).
+        eps_changes [(date, eps, dps)...], and optional eps_growth (from results news, used for
+        quality before eps_changes), news / opinion (0-100).
 
     Returns a list of results, best first:
         {ticker, score, factors {name: 0-100 or None}, raw {...}, excluded: reason or None}
@@ -157,7 +158,8 @@ def score_all(stocks):
         "momentum": {s["ticker"]: momentum(s["rows"]) for s in ranked},
         "value": {s["ticker"]: earnings_yield(s.get("eps"), price[s["ticker"]]) for s in ranked},
         "dividend": {s["ticker"]: covered_yield(s.get("eps"), s.get("dps"), price[s["ticker"]]) for s in ranked},
-        "quality": {s["ticker"]: eps_growth(s.get("eps_changes", [])) for s in ranked},
+        "quality": {s["ticker"]: s["eps_growth"] if s.get("eps_growth") is not None
+                    else eps_growth(s.get("eps_changes", [])) for s in ranked},
         "risk": {s["ticker"]: volatility(s["rows"]) for s in ranked},
         "news": {s["ticker"]: s.get("news") for s in ranked},
         "opinion": {s["ticker"]: s.get("opinion") for s in ranked},
