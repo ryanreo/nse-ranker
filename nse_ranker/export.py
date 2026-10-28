@@ -65,6 +65,22 @@ def news_rows(db, today):
             for t in insights.recent_tags(db, today)]
 
 
+def article_rows(db, today):
+    """Every article from the last 30 days that names a stock, one row per (stock, article).
+
+    Includes headlines Haiku didn't tag (e.g. Business Daily, which is headline-and-link only).
+    """
+    since = (today - timedelta(days=insights.WINDOW_DAYS)).isoformat()
+    rows = []
+    for published, source, title, url, tickers in db.execute(
+            "SELECT published, source, title, url, tickers FROM articles WHERE tickers != '' AND published >= ? "
+            "ORDER BY published DESC", (since,)):
+        for ticker in filter(None, tickers.split(",")):
+            rows.append({"key": f"{ticker}|{url}", "ticker": ticker, "day": published[:10], "title": title,
+                         "source": source, "url": url})
+    return rows
+
+
 def not_ranked_rows(run):
     names = {s["ticker"]: s for s in load_watchlist()}
     rows = [{"ticker": r["ticker"], "name": r["name"], "status": "Thin trading", "reason": r["excluded"]}
@@ -85,13 +101,14 @@ def method_rows():
 
 
 def write_all(db, run, today=None, out_dir=OUT_DIR):
-    """Write the five files. Returns {name: (path, row count)}."""
+    """Write the six files. Returns {name: (path, row count)}."""
     today = today or date.today()
     out_dir.mkdir(parents=True, exist_ok=True)
     files = {
         "ranking": ranking_rows(run),
         "prices": price_rows(db, [r["ticker"] for r in run["ranked"]], today),
         "news": news_rows(db, today),
+        "articles": article_rows(db, today),
         "not_ranked": not_ranked_rows(run),
         "method": method_rows(),
     }

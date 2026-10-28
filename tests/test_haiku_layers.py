@@ -200,6 +200,11 @@ class TestReview(unittest.TestCase):
         checked = review.check_verdict(self.verdict(4, ["N99"]), brief(["N7"]))
         self.assertEqual((checked["move"], checked["evidence"]), (0, []))
 
+    def test_explanation_never_claims_a_move(self):
+        text = "The score is mostly momentum. No news. Move down three places."
+        self.assertEqual(review.drop_move_talk(text), "The score is mostly momentum. No news.")
+        self.assertEqual(review.drop_move_talk("Prices moved sharply."), "Prices moved sharply.")
+
     def test_unknown_case_becomes_mixed(self):
         self.assertEqual(review.check_verdict(self.verdict(0, [], case="buy now"), brief())["case"], "mixed")
 

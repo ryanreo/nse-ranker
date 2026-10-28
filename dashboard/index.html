@@ -48,7 +48,8 @@
   .nse-explain { margin: 0; max-width: 70ch; line-height: 1.55; }
   .nse-two { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
   .nse-factors { display: grid; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); }
-  .nse-factor { display: grid; grid-template-columns: 7.5rem 1fr 2.5rem; align-items: center; gap: var(--cds-gap-sm); }
+  .nse-factor { display: grid; grid-template-columns: 7.5rem 1fr 3.75rem; align-items: center; gap: var(--cds-gap-sm); }
+  .nse-factor > :last-child { white-space: nowrap; }
   .nse-factor .nse-bar { height: 0.6rem; border-radius: var(--cds-radius); background: var(--color-bg); overflow: hidden; }
   .nse-factor .nse-bar i { display: block; height: 100%; border-radius: var(--cds-radius); background: var(--color-fg); }
   .nse-factor .nse-bar i.nse-none { background: transparent; }
@@ -134,7 +135,11 @@
         </div>
       </div>
       <h3>News behind the score</h3>
+      <p class="nse-sub">Articles Haiku read and tagged as good or bad for shareholders.</p>
       <ul class="nse-news" data-draw="d-news" data-source="news"></ul>
+      <h3>Other articles naming it</h3>
+      <p class="nse-sub">Headlines from the last 30 days that mention the company but weren't scored (Business Daily is headline-only by its rules).</p>
+      <ul class="nse-news" data-draw="d-articles" data-source="articles news"></ul>
       <h3>Online opinion</h3>
       <p class="nse-sub" data-draw="d-opinion" data-source="ranking">—</p>
     </article>
@@ -206,7 +211,7 @@
     current() { const rows = nse.rows(); return rows.find((r) => r.ticker === nse.picked) || rows[0]; },
     pick(ticker) {
       nse.picked = ticker;
-      ['rank-table', 'd-title', 'd-meta', 'd-explain', 'd-reasons', 'd-factors', 'd-price', 'd-news', 'd-opinion'].forEach((n) => dash.draw(n));
+      ['rank-table', 'd-title', 'd-meta', 'd-explain', 'd-reasons', 'd-factors', 'd-price', 'd-news', 'd-articles', 'd-opinion'].forEach((n) => dash.draw(n));
     },
     cell(tr, text, cls) { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); return td; },
   };
@@ -461,6 +466,34 @@
       meta.textContent = `${nse.day(t.day)} · ${t.ticker ? 'about the company' : `${t.sector} sector`} · ${effect} for shareholders, strength ${t.strength} · ${t.event}`;
       meta.className = t.direction > 0 ? 'nse-ok' : t.direction < 0 ? 'nse-bad' : '';
       li.append(a, meta);
+      el.appendChild(li);
+    });
+  });
+
+  dash.draw('d-articles', (el) => {
+    const r = nse.current();
+    const a = dash.data('articles');
+    const n = dash.data('news');
+    el.replaceChildren();
+    if (!r || a.status !== 'ok') return;
+    const tagged = new Set((n.status === 'ok' ? n.data : []).filter((t) => t.ticker === r.ticker).map((t) => t.url));
+    const items = a.data.filter((x) => x.ticker === r.ticker && !tagged.has(x.url)).slice(0, 8);
+    if (!items.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No other articles naming this company in the last 30 days.';
+      el.appendChild(li);
+      return;
+    }
+    items.forEach((x) => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = x.url;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = x.title;
+      const meta = document.createElement('small');
+      meta.textContent = `${nse.day(x.day)} · ${x.source}`;
+      li.append(link, meta);
       el.appendChild(li);
     });
   });

@@ -178,7 +178,9 @@ def main():
 
     news_cmd = commands.add_parser("news", help="fetch or read Kenyan news")
     news_actions = news_cmd.add_subparsers(dest="action", required=True)
-    news_actions.add_parser("fetch", help="read every feed in news.toml and store new articles")
+    fetch = news_actions.add_parser("fetch", help="read every source in news.toml and store new articles")
+    fetch.add_argument("--backfill", action="store_true", help="also read older pages, back --days days")
+    fetch.add_argument("--days", type=int, default=30)
     show = news_actions.add_parser("show", help="news for one stock, or counts for all")
     show.add_argument("ticker", nargs="?")
     show.add_argument("--days", type=int, default=14)
@@ -204,7 +206,7 @@ def main():
     elif args.command == "news":
         db = store.connect()
         if args.action == "fetch":
-            for source, (items, new) in news.fetch_all(db).items():
+            for source, (items, new) in news.fetch_all(db, backfill=args.backfill, days=args.days).items():
                 print(f"  {source}: {items} items, {new} new")
         elif args.action == "tag":
             read, kept = insights.tag_pending(db, load_watchlist())

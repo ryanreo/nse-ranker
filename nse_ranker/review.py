@@ -9,6 +9,7 @@ Rules, enforced here rather than trusted to the prompt:
 """
 import hashlib
 import json
+import re
 from datetime import date
 
 from . import haiku
@@ -50,6 +51,7 @@ For EVERY stock, answer "does it make sense to buy?":
   "mixed" = everything in between.
 - explanation: 2-3 plain sentences explaining why it got this score: what drives it, what counts against it,
   and any news that matters. Mention the hold time if it helps. No hype, no certainty, no price targets.
+  Don't mention moving it up or down; the move field is for that, and the rules may change it.
 - move: an integer from -{MAX_MOVE} to {MAX_MOVE}. Positive moves it UP the ranking. Use 0 unless recent news
   (or, much less, online opinion) gives a concrete reason the formula can't see, such as a takeover, a
   profit warning or a dividend cut.
@@ -112,7 +114,15 @@ def check_verdict(verdict, brief):
     elif not news:
         move = max(-OPINION_MAX_MOVE, min(OPINION_MAX_MOVE, move))
     case = verdict.get("case") if verdict.get("case") in CASES else "mixed"
-    return {"case": case, "explanation": verdict.get("explanation", "").strip(), "move": move, "evidence": evidence}
+    return {"case": case, "explanation": drop_move_talk(verdict.get("explanation", "")), "move": move,
+            "evidence": evidence}
+
+
+def drop_move_talk(text):
+    """Remove sentences about moving the stock: the move shown is the one the rules allowed."""
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+    kept = [s for s in sentences if not re.search(r"\bmov(e|ed|ing)\b.*\b(up|down|place|places)\b", s, re.I)]
+    return " ".join(kept)
 
 
 def final_order(ranked, verdicts):
