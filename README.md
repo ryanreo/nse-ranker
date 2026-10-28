@@ -21,6 +21,7 @@ python -m nse_ranker prices eodhd       # fill 2026 from EODHD (needs EODHD_API_
 python -m nse_ranker prices recent      # last ~2 weeks from afx (1 stock a minute)
 python -m nse_ranker prices update      # today's closes, after 15:30 Nairobi time
 python -m nse_ranker prices status      # what's stored
+python -m nse_ranker rank               # the ranked list, with reasons (--top N, --no-save)
 python -m unittest                      # tests
 ```
 Prices are stored in `data/nse.sqlite` (not committed).

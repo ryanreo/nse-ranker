@@ -3,8 +3,10 @@ import argparse
 from collections import Counter
 from datetime import date
 
-from . import prices, store
+from . import prices, ranking, store
 from .watchlist import load_watchlist, rankable
+
+STALE_AFTER_DAYS = 4   # warn if the newest price is older than this
 
 
 def show_watchlist():
@@ -29,6 +31,53 @@ def show_prices_status(db):
         print(f"{item['ticker']:<8} {item['days']:>5} {item['traded_days']:>7}  {item['last'] or '-'}")
 
 
+def _cell(score):
+    return f"{score:4.0f}" if score is not None else "   -"
+
+
+def show_ranking(db, top, save):
+    """Print the ranked list with factor scores and reasons, then what was left out and why."""
+    today = date.today()
+    results = ranking.rank(db, today)
+    before = ranking.previous_positions(db, today.isoformat())
+    if save:
+        ranking.save_run(db, results, today.isoformat())
+
+    ranked = [r for r in results if r["score"] is not None]
+    newest = max(r["price_date"] for r in results)
+    print(f"NSE ranking, {today:%d %b %Y}  (prices up to {newest})")
+    print("A research tool, not financial advice.")
+    if (today - date.fromisoformat(newest)).days > STALE_AFTER_DAYS:
+        print(f"! Prices are more than {STALE_AFTER_DAYS} days old: run `prices update` after 15:30.")
+    print()
+    print(f"{'#':>3}  {'Ticker':<6} {'Score':>5}  {'Mom':>4} {'Val':>4} {'Div':>4} {'Qua':>4} {'Risk':>4}"
+          f"  {'Price':>9}  {'vs last':>7}")
+    for position, r in enumerate(ranked[:top], 1):
+        f = r["factors"]
+        move = "new" if r["ticker"] not in before else f"{before[r['ticker']] - position:+d}"
+        print(f"{position:>3}  {r['ticker']:<6} {r['score']:5.1f}  {_cell(f['momentum'])} {_cell(f['value'])} "
+              f"{_cell(f['dividend'])} {_cell(f['quality'])} {_cell(f['risk'])}  {r['price']:>9,.2f}  {move:>7}")
+        print(f"{'':13}{r['name']}: " + ("; ".join(r["reasons"]) or "no standout factor"))
+    if len(ranked) > top:
+        print(f"... and {len(ranked) - top} more (use --top {len(ranked)} to see all).")
+
+    left_out = [r for r in results if r["score"] is None]
+    if left_out:
+        print()
+        print("Not ranked (too thinly traded to buy and sell easily):")
+        for r in left_out:
+            print(f"  {r['ticker']:<6} {r['excluded']}")
+    no_eps = [r["ticker"] for r in ranked if r["factors"]["value"] is None]
+    if no_eps:
+        print()
+        print(f"No EPS data yet for {len(no_eps)} stocks, so value and dividend are left out for: "
+              + ", ".join(no_eps))
+        print("Fill it with `prices recent` (about a minute per stock).")
+    watch = [s["ticker"] for s in load_watchlist() if s["status"] == "watch"]
+    print()
+    print("On the watch list, not ranked: " + ", ".join(watch))
+
+
 def main():
     parser = argparse.ArgumentParser(prog="nse_ranker", description="Rank my NSE watchlist.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -47,10 +96,16 @@ def main():
     recent.add_argument("tickers", nargs="*", help="default: every stock that isn't 'out'")
     price_actions.add_parser("status", help="show what's stored")
 
+    rank_cmd = commands.add_parser("rank", help="rank the watchlist from stored data")
+    rank_cmd.add_argument("--top", type=int, default=20, help="how many to show (default 20)")
+    rank_cmd.add_argument("--no-save", action="store_true", help="don't record this run")
+
     args = parser.parse_args()
 
     if args.command == "watchlist":
         show_watchlist()
+    elif args.command == "rank":
+        show_ranking(store.connect(), args.top, save=not args.no_save)
     elif args.command == "prices":
         db = store.connect()
         if args.action == "history":
