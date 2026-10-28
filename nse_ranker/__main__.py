@@ -1,10 +1,11 @@
 """Command line: python -m nse_ranker <command>"""
 import argparse
+import json
 import textwrap
 from collections import Counter
 from datetime import date
 
-from . import export, haiku, insights, news, opinion, prices, ranking, review, store
+from . import backtest, export, haiku, insights, news, opinion, prices, ranking, review, store
 from .watchlist import load_watchlist, rankable
 
 STALE_AFTER_DAYS = 4   # warn if the newest price is older than this
@@ -132,6 +133,24 @@ def show_ranking(db, top, save, use_ai):
     print("On the watch list, not ranked: " + ", ".join(watch))
 
 
+def show_backtest(db, first_year):
+    """Run the monthly backtest, print the summary and save every period to reports/backtest.json."""
+    print("Re-ranking every month on momentum and risk (the factors with price history)...")
+    result = backtest.run(db, first=date(first_year, 1, 1))
+    out = export.OUT_DIR.parent / "backtest.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(result, default=str), encoding="utf-8")
+    pct = lambda x: f"{x:+.1%}"
+    print(f"\n{'Hold':>9}  {'Months':>6}  {'Top 1/5':>8}  {'All':>7}  {'Bottom':>7}  {'Top>All':>7}  "
+          f"{'Top>Bot':>7}  {'Rank corr':>9}  {'Top-cost':>8}  {'All-cost':>8}")
+    for months, s in result["summary"].items():
+        print(f"{months:>7} mo  {s['periods']:>6}  {pct(s['top']):>8}  {pct(s['all']):>7}  {pct(s['bottom']):>7}  "
+              f"{s['top_beat_all']:>7.0%}  {s['top_beat_bottom']:>7.0%}  {s['ic']:>9.2f}  "
+              f"{pct(s['top_after_costs']):>8}  {pct(s['all_after_costs']):>8}")
+    print(f"\nAverage price return per holding period (dividends not included). Costs: "
+          f"{backtest.ROUND_TRIP_COST:.0%} per buy-and-sell. Saved every month's detail to {out}")
+
+
 def show_news(db, ticker, days):
     """One stock's news (direct mentions, then sector topics), or a count per stock."""
     if not ticker:
@@ -196,6 +215,9 @@ def main():
     rank_cmd.add_argument("--no-save", action="store_true", help="don't record this run")
     rank_cmd.add_argument("--no-ai", action="store_true", help="formula order only, no Haiku")
 
+    backtest_cmd = commands.add_parser("backtest", help="test the price-based score on NSE history")
+    backtest_cmd.add_argument("--from", dest="first_year", type=int, default=2008)
+
     export_cmd = commands.add_parser("export", help="write the ranking as JSON files for the dashboard")
     export_cmd.add_argument("--no-ai", action="store_true", help="formula order only, no Haiku")
 
@@ -222,6 +244,8 @@ def main():
         print(f"Opinion stored for {len(opinion.latest(db))} stocks.")
     elif args.command == "rank":
         show_ranking(store.connect(), args.top, save=not args.no_save, use_ai=not args.no_ai)
+    elif args.command == "backtest":
+        show_backtest(store.connect(), args.first_year)
     elif args.command == "export":
         db = store.connect()
         run = full_ranking(db, not args.no_ai, date.today())
