@@ -180,6 +180,14 @@ each run, based on actual trading.
 | [afx.kwayisi.org/nse](https://afx.kwayisi.org/nse/) | latest prices and volume for every counter; per-stock pages with EPS, dividend per share, yield, market cap | robots.txt allows it with **`Crawl-delay: 60`** | one request per run for prices; stock pages fetched slowly (one a minute) once a week |
 | [NSE website](https://www.nse.co.ke/) | official daily price list, announcements | robots.txt allows it | check the daily price list format; use it to verify |
 | [NSE crawler on GitHub](https://github.com/kwoshvick/NSE-Stock-Price-Crawler) | prices 2006 to April 2022 | — | not needed; Mendeley covers the same years and goes further |
+| NSE daily price list PDFs (`nse.co.ke/wp-content/uploads/27-OCT-26.pdf`) | every trading day, including 2026 | allowed | **scanned images, no text**: would need OCR |
+| [MyStocks](https://live.mystocks.co.ke/) | daily price lists | price lists need a login; [terms](https://live.mystocks.co.ke/terms.php) forbid redistribution | not used |
+| [StockAnalysis](https://stockanalysis.com/) | NSE price history | [terms](https://stockanalysis.com/terms-of-use/) ban scripts and scrapers | not used |
+| [EODHD](https://eodhd.com/pricing) | end-of-day API; free plan: 20 calls a day plus 500 bonus, 1 year of history | official API, needs a free key | option for the Jan–Oct 2026 gap (NSE coverage on the free plan unconfirmed) |
+
+**Gap:** no free, allowed source found yet for **January to mid-October 2026**. Mendeley stops at
+31 Dec 2025 and afx keeps only about two weeks per stock. afx's main page also marks NCBA as suspended
+(28 Oct 2026), which needs checking.
 
 The Mendeley data was itself scraped from MyStocks, which is licensed by the NSE, so we spot-check it
 against afx and NSE figures. The credit line goes in the README.
