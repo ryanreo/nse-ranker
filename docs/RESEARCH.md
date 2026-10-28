@@ -46,6 +46,16 @@ backtest (section 8), not settled facts.
 | **Online opinion** | what people and analysts say on X, Reddit, YouTube | **3 (lowest)** | can nudge a score but can't decide a ranking |
 
 Every factor score is 0–100, ranked against the other stocks. The final score is the weighted average.
+
+**As built (section 4, `nse_ranker/scoring.py`):**
+- Liquidity gate: an average of at least **KES 100,000 traded a day** over 60 days, with trades on at least
+  half of those days. On 28 Oct 2026 this moves LIMT, SGL, LKL, OCH and XPRS to watch.
+- Value is earnings yield (EPS ÷ price, the inverse of P/E) minus the sector median. Sectors with fewer than
+  3 stocks are compared with the whole market. Price-to-book is left out because no free source has book value.
+- Quality is EPS growth between two different results. afx shows only the latest EPS, so we save a snapshot
+  on every fetch, and quality starts counting once a company reports new results.
+- A factor with no data for a stock is left out, and the other weights are scaled up to fill in.
+  It's never counted as zero.
 The backtest (section 8) will check whether these weights beat simpler ones, such as momentum alone.
 
 ---
